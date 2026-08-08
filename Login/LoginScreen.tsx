@@ -10,14 +10,18 @@ import {
   KeyboardAvoidingView,
   Platform,
   Dimensions,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useFonts, DancingScript_700Bold } from '@expo-google-fonts/dancing-script';
+import { supabase } from '../lib/supabase';
 
 const { height } = Dimensions.get('window');
 
 export default function LoginScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const [fontsLoaded] = useFonts({
     DancingScript_700Bold,
@@ -30,6 +34,42 @@ export default function LoginScreen({ navigation }: any) {
       </View>
     );
   }
+const handleLogin = async () => {
+  if (!email || !password) {
+    if (Platform.OS === 'web') {
+      window.alert('Please enter email and password');
+    } else {
+      Alert.alert('Error', 'Please enter email and password');
+    }
+    return;
+  }
+
+  setLoading(true);
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email: email.trim().toLowerCase(),
+    password: password,
+  });
+
+  setLoading(false);
+
+  if (error) {
+    console.log('Login error:', error.message);
+    if (Platform.OS === 'web') {
+      window.alert('Login Failed: ' + error.message);
+    } else {
+      Alert.alert('Login Failed', error.message);
+    }
+  } else {
+    console.log('Login success!');
+
+    // Go to the main app (Home + tabs)
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'MainTabs' }],
+    });
+  }
+};
 
   return (
     <SafeAreaView style={styles.container}>
@@ -80,15 +120,27 @@ export default function LoginScreen({ navigation }: any) {
               <Text style={styles.forgotText}>Forgot Password?</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.loginButton} activeOpacity={0.85}>
-              <Text style={styles.loginButtonText}>LOGIN WITH EMAIL</Text>
+            <TouchableOpacity
+              style={styles.loginButton}
+              activeOpacity={0.85}
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.loginButtonText}>LOGIN WITH EMAIL</Text>
+              )}
             </TouchableOpacity>
 
             <Text style={styles.signupText}>
-            Don't have an account?{' '}
-<Text style={styles.signupLink} onPress={() => navigation.navigate('SignUp')}>
-  Sign Up!
-</Text>
+              Don't have an account?{' '}
+              <Text
+                style={styles.signupLink}
+                onPress={() => navigation.navigate('SignUp')}
+              >
+                Sign Up!
+              </Text>
             </Text>
           </View>
         </View>
@@ -132,7 +184,7 @@ const styles = StyleSheet.create({
   },
   catImage: {
     width: 330,
-    height: height * 0.48, // responsive height
+    height: height * 0.48,
     bottom: -50,
   },
   formContainer: {
