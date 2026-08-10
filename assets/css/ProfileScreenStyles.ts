@@ -1,6 +1,10 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import {
+  StyleSheet,
+  Dimensions,
+} from 'react-native';
 
 const { width } = Dimensions.get('window');
+
 const isSmallPhone = width < 360;
 
 const styles = StyleSheet.create({
@@ -11,19 +15,22 @@ const styles = StyleSheet.create({
 
   content: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 18,
+    paddingHorizontal: isSmallPhone ? 16 : 22,
+    paddingTop: 16,
   },
 
   backButton: {
-    alignSelf: 'flex-start',
-    marginBottom: 8,
+    width: 38,
+    height: 38,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    marginBottom: 6,
   },
 
   profileRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 18,
   },
 
   profileImage: {
@@ -38,11 +45,11 @@ const styles = StyleSheet.create({
   },
 
   name: {
-    fontSize: isSmallPhone ? 28 : 32,
+    fontSize: isSmallPhone ? 27 : 31,
     fontStyle: 'italic',
     fontWeight: '600',
     color: '#14646B',
-    marginBottom: 6,
+    marginBottom: 7,
   },
 
   detailsRow: {
@@ -51,11 +58,12 @@ const styles = StyleSheet.create({
   },
 
   detailBlock: {
-    marginRight: 10,
+    marginRight: 8,
   },
 
   detailValue: {
     fontSize: isSmallPhone ? 11 : 12,
+    fontWeight: '500',
     color: '#222',
   },
 
@@ -69,18 +77,19 @@ const styles = StyleSheet.create({
     fontSize: isSmallPhone ? 20 : 22,
     fontWeight: '700',
     color: '#111',
-    marginBottom: 6,
+    marginBottom: 8,
   },
 
   menuCard: {
+    width: '100%',
     backgroundColor: '#E2F3F2',
-    borderRadius: 16,
+    borderRadius: 18,
     paddingHorizontal: 16,
-    paddingVertical: 4,
+    paddingVertical: 5,
   },
 
   menuRow: {
-    minHeight: 54,
+    minHeight: 55,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -92,23 +101,41 @@ const styles = StyleSheet.create({
   },
 
   menuText: {
+    marginLeft: 11,
     fontSize: isSmallPhone ? 14 : 15,
     fontWeight: '600',
     color: '#16444A',
-    marginLeft: 10,
   },
 
   notificationRow: {
-    minHeight: 58,
+    minHeight: 57,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
 
   notificationText: {
+    marginLeft: 11,
     fontSize: isSmallPhone ? 14 : 15,
     fontWeight: '600',
     color: '#16444A',
+  },
+
+  logoutRow: {
+    minHeight: 55,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(22, 68, 74, 0.12)',
+  },
+
+  logoutText: {
+    marginLeft: 11,
+    fontSize: isSmallPhone ? 14 : 15,
+    fontWeight: '700',
+    color: '#D06435',
   },
 });
 

@@ -23,15 +23,18 @@ import {
 
 import { supabase } from './lib/supabase';
 
-// AUTH SCREENS
+// SPLASH
+import AnimatedSplash from './Login/AnimatedSplash';
+
+// AUTH
 import WelcomeScreen from './Login/WelcomeScreen';
 import LoginScreen from './Login/LoginScreen';
 import SignUpScreen from './Login/SignupScreen';
 
-// MAIN NAVIGATION
+// MAIN NAV
 import Nav from './Login/Nav/BottomNav';
 
-// OTHER STACK SCREENS
+// OTHER SCREENS
 import EditProfileScreen from './Login/EditProfileScreen';
 import BoardingDetails from './Login/BoardingDetails';
 import Rooms from './Login/Rooms';
@@ -44,6 +47,9 @@ export default function App() {
     useState<Session | null>(null);
 
   const [loading, setLoading] =
+    useState(true);
+
+  const [showSplash, setShowSplash] =
     useState(true);
 
   useEffect(() => {
@@ -71,12 +77,20 @@ export default function App() {
     };
   }, []);
 
+  if (showSplash) {
+    return (
+      <AnimatedSplash
+        onFinish={() => setShowSplash(false)}
+      />
+    );
+  }
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator
           size="large"
-          color="#0B6E71"
+          color="#14646B"
         />
       </View>
     );

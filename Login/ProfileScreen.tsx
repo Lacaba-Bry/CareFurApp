@@ -7,14 +7,89 @@ import {
   Image,
   TouchableOpacity,
   Switch,
+  Alert,
+  Platform,
 } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
+
+import { supabase } from '../lib/supabase';
 
 import styles from '../assets/css/ProfileScreenStyles';
 
 export default function ProfileScreen({ navigation }: any) {
   const [notifications, setNotifications] = useState(true);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const logoutUser = async () => {
+    try {
+      setLoggingOut(true);
+
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        if (Platform.OS === 'web') {
+          window.alert(`Logout Failed: ${error.message}`);
+        } else {
+          Alert.alert(
+            'Logout Failed',
+            error.message
+          );
+        }
+      }
+
+      /*
+        No navigation needed here.
+
+        App.tsx detects that the Supabase
+        session is now null and automatically
+        switches to WelcomeScreen/Login.
+      */
+    } catch (error) {
+      if (Platform.OS === 'web') {
+        window.alert(
+          'Something went wrong while logging out.'
+        );
+      } else {
+        Alert.alert(
+          'Error',
+          'Something went wrong while logging out.'
+        );
+      }
+    } finally {
+      setLoggingOut(false);
+    }
+  };
+
+  const handleLogout = () => {
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm(
+        'Are you sure you want to log out?'
+      );
+
+      if (confirmed) {
+        logoutUser();
+      }
+
+      return;
+    }
+
+    Alert.alert(
+      'Log Out',
+      'Are you sure you want to log out?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Log Out',
+          style: 'destructive',
+          onPress: logoutUser,
+        },
+      ]
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -23,6 +98,7 @@ export default function ProfileScreen({ navigation }: any) {
         {/* BACK */}
         <TouchableOpacity
           style={styles.backButton}
+          activeOpacity={0.7}
           onPress={() => navigation.goBack()}
         >
           <Ionicons
@@ -32,7 +108,7 @@ export default function ProfileScreen({ navigation }: any) {
           />
         </TouchableOpacity>
 
-        {/* PROFILE */}
+        {/* PROFILE INFORMATION */}
         <View style={styles.profileRow}>
           <Image
             source={require('../assets/Login/Logo.jpg')}
@@ -79,14 +155,15 @@ export default function ProfileScreen({ navigation }: any) {
           </View>
         </View>
 
-        {/* INFORMATION TITLE */}
+        {/* TITLE */}
         <Text style={styles.sectionTitle}>
           Information
         </Text>
 
-        {/* MENU */}
+        {/* MENU CARD */}
         <View style={styles.menuCard}>
 
+          {/* EDIT PROFILE */}
           <MenuItem
             icon="create-outline"
             title="Edit Profile"
@@ -95,6 +172,7 @@ export default function ProfileScreen({ navigation }: any) {
             }
           />
 
+          {/* PETS */}
           <MenuItem
             icon="paw"
             title="Pets"
@@ -103,6 +181,7 @@ export default function ProfileScreen({ navigation }: any) {
             }
           />
 
+          {/* BOARDING HISTORY */}
           <MenuItem
             icon="calendar-outline"
             title="Boarding History"
@@ -129,8 +208,8 @@ export default function ProfileScreen({ navigation }: any) {
               value={notifications}
               onValueChange={setNotifications}
               trackColor={{
-                false: '#CCCCCC',
-                true: '#A9D9DA',
+                false: '#C8CECD',
+                true: '#9DD5D7',
               }}
               thumbColor={
                 notifications
@@ -140,8 +219,35 @@ export default function ProfileScreen({ navigation }: any) {
             />
           </View>
 
-        </View>
+          {/* LOGOUT */}
+          <TouchableOpacity
+            style={styles.logoutRow}
+            activeOpacity={0.7}
+            disabled={loggingOut}
+            onPress={handleLogout}
+          >
+            <View style={styles.menuLeft}>
+              <Ionicons
+                name="log-out-outline"
+                size={24}
+                color="#D06435"
+              />
 
+              <Text style={styles.logoutText}>
+                {loggingOut
+                  ? 'Logging Out...'
+                  : 'Log Out'}
+              </Text>
+            </View>
+
+            <Ionicons
+              name="chevron-forward"
+              size={24}
+              color="#D06435"
+            />
+          </TouchableOpacity>
+
+        </View>
       </View>
     </SafeAreaView>
   );
