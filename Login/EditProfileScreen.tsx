@@ -1,373 +1,248 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import {
   SafeAreaView,
   View,
   Text,
-  StyleSheet,
   Image,
   TextInput,
   TouchableOpacity,
+  Pressable,
 } from 'react-native';
 
-
-
-export default function EditProfileScreen({navigation}:any){
-
-return (
-
-<SafeAreaView style={styles.container}>
-
-
-<Text style={styles.header}>
-Edit Profile
-</Text>
-
-
-
-<TouchableOpacity
-onPress={()=>navigation.goBack()}
->
-
-<Text style={styles.back}>
-‹
-</Text>
-
-</TouchableOpacity>
-
-
-
-
-
-<View style={styles.photoContainer}>
-
-
-<Image
-
-source={require('../assets/Login/Logo.jpg')}
-
-style={styles.profileImage}
-
-/>
-
-
-<Text style={styles.change}>
-Change Picture
-</Text>
-
-
-</View>
-
-
-
-
-
-
-<View style={styles.form}>
-
-
-<Input
-label="First Name:"
-placeholder="Beia"
-/>
-
-
-<Input
-label="Last Name:"
-placeholder="Ann"
-/>
-
-
-<Input
-label="Birthday:"
-placeholder="MM/DD/YY"
-/>
-
-
-<Input
-label="Age:"
-placeholder="23"
-/>
-
-
-
-
-
-<View style={styles.inputRow}>
-
-<Text style={styles.label}>
-Sex:
-</Text>
-
-
-<View style={styles.select}>
-
-<Text>
-⌄
-</Text>
-
-</View>
-
-
-</View>
-
-
-
-</View>
-
-
-
-
-
-
-
-<View style={styles.buttons}>
-
-
-<TouchableOpacity style={styles.cancel}>
-
-<Text style={styles.cancelText}>
-CANCEL
-</Text>
-
-</TouchableOpacity>
-
-
-
-
-
-<TouchableOpacity style={styles.apply}>
-
-<Text style={styles.applyText}>
-APPLY
-</Text>
-
-</TouchableOpacity>
-
-
-</View>
-
-
-
-
-
-
-<Image
-
-source={require('../assets/Login/LogoSignup.png')}
-
-style={styles.dog}
-
-resizeMode="cover"
-
-/>
-
-
-
-
-</SafeAreaView>
-
-);
-
+import { Ionicons } from '@expo/vector-icons';
+
+import styles from '../assets/css/EditProfileStyles';
+
+export default function EditProfileScreen({ navigation }: any) {
+  const [firstName, setFirstName] = useState('Beia');
+  const [lastName, setLastName] = useState('Ann');
+  const [birthday, setBirthday] = useState('');
+  const [age, setAge] = useState('23');
+  const [sex, setSex] = useState('Female');
+
+  const [showSexOptions, setShowSexOptions] = useState(false);
+
+  const handleApply = () => {
+    console.log({
+      firstName,
+      lastName,
+      birthday,
+      age,
+      sex,
+    });
+
+    navigation.goBack();
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+
+      {/* HEADER */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          activeOpacity={0.7}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons
+            name="chevron-back"
+            size={28}
+            color="#16444A"
+          />
+        </TouchableOpacity>
+
+        <Text style={styles.headerTitle}>
+          Edit Profile
+        </Text>
+
+        <View style={styles.headerSpacer} />
+      </View>
+
+      {/* PROFILE PHOTO */}
+      <View style={styles.photoSection}>
+        <View style={styles.imageWrapper}>
+          <Image
+            source={require('../assets/Login/Logo.jpg')}
+            style={styles.profileImage}
+            resizeMode="cover"
+          />
+
+          <TouchableOpacity
+            style={styles.cameraButton}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name="camera"
+              size={16}
+              color="#FFFFFF"
+            />
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity activeOpacity={0.7}>
+          <Text style={styles.changeText}>
+            Change Picture
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* FORM CARD */}
+      <View style={styles.form}>
+
+        <Input
+          label="First Name"
+          value={firstName}
+          onChangeText={setFirstName}
+          placeholder="First name"
+        />
+
+        <Input
+          label="Last Name"
+          value={lastName}
+          onChangeText={setLastName}
+          placeholder="Last name"
+        />
+
+        <Input
+          label="Birthday"
+          value={birthday}
+          onChangeText={setBirthday}
+          placeholder="MM/DD/YYYY"
+          keyboardType="numbers-and-punctuation"
+        />
+
+        <Input
+          label="Age"
+          value={age}
+          onChangeText={setAge}
+          placeholder="Age"
+          keyboardType="number-pad"
+        />
+
+        {/* SEX */}
+        <View style={styles.inputRow}>
+          <Text style={styles.label}>
+            Sex
+          </Text>
+
+          <View style={styles.selectWrapper}>
+            <Pressable
+              style={styles.select}
+              onPress={() =>
+                setShowSexOptions(!showSexOptions)
+              }
+            >
+              <Text style={styles.selectText}>
+                {sex}
+              </Text>
+
+              <Ionicons
+                name={
+                  showSexOptions
+                    ? 'chevron-up'
+                    : 'chevron-down'
+                }
+                size={18}
+                color="#16444A"
+              />
+            </Pressable>
+
+            {showSexOptions && (
+              <View style={styles.dropdown}>
+                <TouchableOpacity
+                  style={styles.dropdownItem}
+                  onPress={() => {
+                    setSex('Female');
+                    setShowSexOptions(false);
+                  }}
+                >
+                  <Text style={styles.dropdownText}>
+                    Female
+                  </Text>
+                </TouchableOpacity>
+
+                <View style={styles.dropdownDivider} />
+
+                <TouchableOpacity
+                  style={styles.dropdownItem}
+                  onPress={() => {
+                    setSex('Male');
+                    setShowSexOptions(false);
+                  }}
+                >
+                  <Text style={styles.dropdownText}>
+                    Male
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </View>
+
+      </View>
+
+      {/* BUTTONS */}
+      <View style={styles.buttons}>
+        <TouchableOpacity
+          style={styles.cancel}
+          activeOpacity={0.8}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.cancelText}>
+            CANCEL
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.apply}
+          activeOpacity={0.8}
+          onPress={handleApply}
+        >
+          <Text style={styles.applyText}>
+            APPLY
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+    </SafeAreaView>
+  );
 }
 
+/* REUSABLE INPUT */
 
-
-
-
-
+type InputProps = {
+  label: string;
+  value: string;
+  placeholder: string;
+  onChangeText: (text: string) => void;
+  keyboardType?:
+    | 'default'
+    | 'number-pad'
+    | 'numbers-and-punctuation';
+};
 
 function Input({
+  label,
+  value,
+  placeholder,
+  onChangeText,
+  keyboardType = 'default',
+}: InputProps) {
+  return (
+    <View style={styles.inputRow}>
+      <Text style={styles.label}>
+        {label}
+      </Text>
 
-label,
-placeholder
-
-}:{
-label:string;
-placeholder:string;
-}){
-
-
-return(
-
-<View style={styles.inputRow}>
-
-
-<Text style={styles.label}>
-{label}
-</Text>
-
-
-TextInput
-
-<View style={styles.input}>
-
-<TextInput
-
-placeholder={placeholder}
-
-style={{flex:1,fontSize:12}}
-
-/>
-
-</View>
-
-
-</View>
-
-
-)
-
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor="#A5A5A5"
+        keyboardType={keyboardType}
+        style={styles.input}
+      />
+    </View>
+  );
 }
-
-
-
-
-
-
-
-const styles = StyleSheet.create({
-
-
-container:{
-flex:1,
-backgroundColor:'#FFFDF8',
-padding:15,
-},
-
-
-
-header:{
-fontSize:12,
-color:'#ddd',
-},
-
-
-
-back:{
-fontSize:40,
-marginTop:10,
-},
-
-
-
-photoContainer:{
-alignItems:'center',
-},
-
-
-
-profileImage:{
-width:70,
-height:70,
-borderRadius:50,
-},
-
-
-
-change:{
-fontSize:10,
-},
-
-
-
-
-form:{
-backgroundColor:'#D6C292',
-borderRadius:20,
-padding:15,
-marginTop:10,
-},
-
-
-
-inputRow:{
-flexDirection:'row',
-alignItems:'center',
-marginBottom:12,
-},
-
-
-
-label:{
-width:80,
-fontSize:11,
-},
-
-
-
-input:{
-backgroundColor:'white',
-borderRadius:10,
-height:25,
-flex:1,
-borderWidth:1,
-borderColor:'#555',
-},
-
-
-
-
-select:{
-backgroundColor:'white',
-borderRadius:10,
-height:25,
-flex:1,
-alignItems:'flex-end',
-paddingRight:10,
-},
-
-
-
-
-buttons:{
-flexDirection:'row',
-justifyContent:'flex-end',
-gap:8,
-marginTop:8,
-},
-
-
-
-
-cancel:{
-backgroundColor:'#aaa',
-paddingHorizontal:15,
-paddingVertical:7,
-borderRadius:20,
-},
-
-
-apply:{
-backgroundColor:'#0B6E71',
-paddingHorizontal:15,
-paddingVertical:7,
-borderRadius:20,
-},
-
-
-
-cancelText:{
-color:'white',
-fontSize:11,
-},
-
-
-applyText:{
-color:'white',
-fontSize:11,
-},
-
-
-
-
-dog:{
-position:'absolute',
-bottom:0,
-left:40,
-width:250,
-height:170,
-},
-
-
-});

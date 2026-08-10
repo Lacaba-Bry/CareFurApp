@@ -1,260 +1,184 @@
-import React from 'react';
+import React, { useState } from 'react';
+
 import {
   SafeAreaView,
   View,
   Text,
-  StyleSheet,
   Image,
-  TextInput,
   TouchableOpacity,
-  ScrollView,
+  Switch,
 } from 'react-native';
 
-export default function EditProfileScreen({navigation}:any){
+import { Ionicons } from '@expo/vector-icons';
 
-return(
-<SafeAreaView style={styles.container}>
+import styles from '../assets/css/ProfileScreenStyles';
 
-<ScrollView showsVerticalScrollIndicator={false}>
+export default function ProfileScreen({ navigation }: any) {
+  const [notifications, setNotifications] = useState(true);
 
-<Text style={styles.header}>
-Edit Profile
-</Text>
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.content}>
 
-<TouchableOpacity onPress={()=>navigation.goBack()}>
-<Text style={styles.back}>‹</Text>
-</TouchableOpacity>
+        {/* BACK */}
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons
+            name="chevron-back"
+            size={28}
+            color="#111"
+          />
+        </TouchableOpacity>
 
+        {/* PROFILE */}
+        <View style={styles.profileRow}>
+          <Image
+            source={require('../assets/Login/Logo.jpg')}
+            style={styles.profileImage}
+            resizeMode="cover"
+          />
 
-<View style={styles.photo}>
-<Image
-source={require('../assets/Login/Logo.jpg')}
-style={styles.avatar}
-/>
-<Text style={styles.change}>
-Change Picture
-</Text>
-</View>
+          <View style={styles.profileInfo}>
+            <Text style={styles.name}>
+              Beia Ann
+            </Text>
 
+            <View style={styles.detailsRow}>
+              <View style={styles.detailBlock}>
+                <Text style={styles.detailValue}>
+                  Female
+                </Text>
 
+                <Text style={styles.detailLabel}>
+                  Sex
+                </Text>
+              </View>
 
-<View style={styles.form}>
+              <View style={styles.detailBlock}>
+                <Text style={styles.detailValue}>
+                  23
+                </Text>
 
-<Field label="First Name:" value="Beia"/>
-<Field label="Last Name:" value="Ann"/>
-<Field label="Birthday:" value="MM/DD/YY"/>
-<Field label="Age:" value="23"/>
+                <Text style={styles.detailLabel}>
+                  Age
+                </Text>
+              </View>
 
+              <View style={styles.detailBlock}>
+                <Text style={styles.detailValue}>
+                  04/18/2005
+                </Text>
 
-<View style={styles.line}>
+                <Text style={styles.detailLabel}>
+                  Birthday
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
 
-<Text style={styles.label}>
-Sex:
-</Text>
+        {/* INFORMATION TITLE */}
+        <Text style={styles.sectionTitle}>
+          Information
+        </Text>
 
-<View style={styles.dropdown}>
-<Text>⌄</Text>
-</View>
+        {/* MENU */}
+        <View style={styles.menuCard}>
 
-</View>
+          <MenuItem
+            icon="create-outline"
+            title="Edit Profile"
+            onPress={() =>
+              navigation.navigate('EditProfile')
+            }
+          />
 
+          <MenuItem
+            icon="paw"
+            title="Pets"
+            onPress={() =>
+              navigation.navigate('Pets')
+            }
+          />
 
-</View>
+          <MenuItem
+            icon="calendar-outline"
+            title="Boarding History"
+            onPress={() =>
+              navigation.navigate('BookingHistory')
+            }
+          />
 
+          {/* NOTIFICATION */}
+          <View style={styles.notificationRow}>
+            <View style={styles.menuLeft}>
+              <Ionicons
+                name="notifications-outline"
+                size={24}
+                color="#16444A"
+              />
 
+              <Text style={styles.notificationText}>
+                Notification
+              </Text>
+            </View>
 
-<View style={styles.buttons}>
+            <Switch
+              value={notifications}
+              onValueChange={setNotifications}
+              trackColor={{
+                false: '#CCCCCC',
+                true: '#A9D9DA',
+              }}
+              thumbColor={
+                notifications
+                  ? '#16444A'
+                  : '#FFFFFF'
+              }
+            />
+          </View>
 
-<TouchableOpacity style={styles.cancel}>
-<Text style={styles.btn}>
-CANCEL
-</Text>
-</TouchableOpacity>
+        </View>
 
-
-<TouchableOpacity style={styles.apply}>
-<Text style={styles.btn}>
-APPLY
-</Text>
-</TouchableOpacity>
-
-</View>
-
-
-
-<Image
-source={require('../assets/Login/LogoSignup.png')}
-style={styles.dog}
-/>
-
-
-</ScrollView>
-
-</SafeAreaView>
-);
-
+      </View>
+    </SafeAreaView>
+  );
 }
 
+function MenuItem({
+  icon,
+  title,
+  onPress,
+}: {
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  title: string;
+  onPress?: () => void;
+}) {
+  return (
+    <TouchableOpacity
+      style={styles.menuRow}
+      activeOpacity={0.7}
+      onPress={onPress}
+    >
+      <View style={styles.menuLeft}>
+        <Ionicons
+          name={icon}
+          size={24}
+          color="#16444A"
+        />
 
+        <Text style={styles.menuText}>
+          {title}
+        </Text>
+      </View>
 
-
-
-function Field({
-label,
-value
-}:{
-label:string;
-value:string;
-}){
-
-return(
-
-<View style={styles.line}>
-
-<Text style={styles.label}>
-{label}
-</Text>
-
-
-<TextInput
-value={value}
-style={styles.input}
-/>
-
-
-</View>
-
-);
-
+      <Ionicons
+        name="chevron-forward"
+        size={24}
+        color="#111"
+      />
+    </TouchableOpacity>
+  );
 }
-
-
-
-
-
-
-
-const styles = StyleSheet.create({
-
-container:{
-flex:1,
-backgroundColor:'#FFFDF8',
-},
-
-
-header:{
-fontSize:12,
-color:'#ccc',
-marginLeft:5,
-marginTop:5,
-},
-
-
-back:{
-fontSize:35,
-marginLeft:10,
-marginTop:-5,
-},
-
-
-photo:{
-alignItems:'center',
-marginTop:0,
-},
-
-
-avatar:{
-width:70,
-height:70,
-borderRadius:50,
-},
-
-
-change:{
-fontSize:10,
-},
-
-
-form:{
-backgroundColor:'#D8C48E',
-borderRadius:18,
-padding:12,
-margin:10,
-},
-
-
-line:{
-flexDirection:'row',
-alignItems:'center',
-marginBottom:10,
-},
-
-
-label:{
-width:'25%',
-fontSize:11,
-},
-
-
-input:{
-flex:1,
-height:27,
-backgroundColor:'white',
-borderRadius:12,
-borderWidth:1,
-paddingHorizontal:10,
-fontSize:12,
-},
-
-
-dropdown:{
-flex:1,
-height:27,
-backgroundColor:'white',
-borderRadius:12,
-alignItems:'flex-end',
-justifyContent:'center',
-paddingRight:10,
-},
-
-
-buttons:{
-flexDirection:'row',
-justifyContent:'flex-end',
-marginRight:10,
-gap:8,
-},
-
-
-cancel:{
-backgroundColor:'#aaa',
-paddingHorizontal:15,
-paddingVertical:7,
-borderRadius:20,
-},
-
-
-apply:{
-backgroundColor:'#0B6E71',
-paddingHorizontal:15,
-paddingVertical:7,
-borderRadius:20,
-},
-
-
-btn:{
-color:'white',
-fontSize:11,
-fontWeight:'bold',
-},
-
-
-dog:{
-width:'100%',
-height:200,
-resizeMode:'contain',
-marginTop:5,
-},
-
-
-});

@@ -1,390 +1,95 @@
 import React from 'react';
-
 import {
   SafeAreaView,
   View,
   Text,
-  StyleSheet,
   Image,
   TouchableOpacity,
 } from 'react-native';
-
 import { Ionicons } from '@expo/vector-icons';
+import styles from '../assets/css/CameraScreenStyles';
 
-
-
-export default function CameraScreen(){
-
+export default function CameraScreen() {
   return (
-
     <SafeAreaView style={styles.container}>
-
-
-      {/* Header */}
-
       <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton}>
+          <Ionicons name="chevron-back" size={28} color="#111" />
+        </TouchableOpacity>
 
-        <Text style={styles.back}>
-          ‹
-        </Text>
-
-
-        <View>
-
-          <Text style={styles.title}>
-            Live Camera
-          </Text>
-
+        <View style={styles.headerCenter}>
+          <Text style={styles.title}>Live Camera</Text>
 
           <View style={styles.infoRow}>
-
-            <Text style={styles.info}>
-              🐾 Pet: Sachi
-            </Text>
-
-
-            <Text style={styles.info}>
-              🏠 Room: A-10
-            </Text>
-
+            <Text style={styles.info}>🐶 Pet: <Text style={styles.bold}>Sachi</Text></Text>
+            <Text style={styles.info}>🏠 Room: <Text style={styles.bold}>A-10</Text></Text>
           </View>
-
-
         </View>
-
-
       </View>
-
-
-
-
-
-      {/* Camera View */}
 
       <Image
-
-        source={require('../assets/Login/LogoSignup.png')}
-
+        source={require('../assets/Login/CamSamp.png')}
         style={styles.camera}
-
         resizeMode="cover"
-
       />
 
-
-
       <TouchableOpacity style={styles.fullscreen}>
-
-        <Text style={styles.fullText}>
-          ⛶ Full screen
-        </Text>
-
+        <Ionicons name="scan-outline" size={15} color="#FFF" />
+        <Text style={styles.fullText}>Full screen</Text>
       </TouchableOpacity>
 
-
-
-
-
-
-
-      {/* Captured */}
-
-      <View style={styles.line}/>
-
-
-      <Text style={styles.captureTitle}>
-        Captured Snapshots:
-      </Text>
-
-
-      <Text style={styles.count}>
-        5/15
-      </Text>
-
-
-
-
-
-
-      {/* Snapshot */}
+      <View style={styles.captureSection}>
+        <View style={styles.line} />
+        <Text style={styles.captureTitle}>Captured Snapshots:</Text>
+        <View style={styles.line} />
+        <Text style={styles.count}>5/15</Text>
+      </View>
 
       <View style={styles.snapshotRow}>
-
-
-        <Text style={styles.arrow}>
-          ◀
-        </Text>
-
-
+        <TouchableOpacity>
+          <Ionicons name="caret-back" size={29} color="#D06435" />
+        </TouchableOpacity>
 
         <Image
-
-          source={require('../assets/Login/Logo.jpg')}
-
+          source={require('../assets/Login/CamSamp1.png')}
           style={styles.snapshot}
-
+          resizeMode="cover"
         />
 
-
-
-        <Text style={styles.arrow}>
-          ▶
-        </Text>
-
-
+        <TouchableOpacity>
+          <Ionicons name="caret-forward" size={29} color="#D06435" />
+        </TouchableOpacity>
       </View>
-
-
-
-
 
       <TouchableOpacity style={styles.photos}>
-
-        <Text style={styles.photosText}>
-          View All Photos →
-        </Text>
-
-
+        <Text style={styles.photosText}>View All Photos →</Text>
       </TouchableOpacity>
 
-
-
-
-
-
-      {/* Date */}
-
       <View style={styles.details}>
+        <View style={styles.detailItem}>
+          <Ionicons name="calendar-outline" size={18} color="#111" />
+          <Text style={styles.detailText}>Date: <Text style={styles.bold}>99/99/99</Text></Text>
+        </View>
 
-
-        <Text>
-          📅 Date: 99/99/99
-        </Text>
-
-
-        <Text>
-          🕘 Time: 03:00 PM
-        </Text>
-
-
+        <View style={styles.detailItem}>
+          <Ionicons name="time-outline" size={19} color="#111" />
+          <Text style={styles.detailText}>Time: <Text style={styles.bold}>03:00 PM</Text></Text>
+        </View>
       </View>
-
-
-
-
-
-
-
-      {/* Controls */}
 
       <View style={styles.controls}>
+        <TouchableOpacity>
+          <Ionicons name="volume-high" size={29} color="#FFF" />
+        </TouchableOpacity>
 
+        <TouchableOpacity style={styles.captureButton}>
+          <View style={styles.captureInner} />
+        </TouchableOpacity>
 
-        <Ionicons
-          name="volume-high"
-          size={25}
-          color="white"
-        />
-
-
-        <View style={styles.circle}/>
-
-
-        <Ionicons
-          name="videocam"
-          size={28}
-          color="white"
-        />
-
-
+        <TouchableOpacity>
+          <Ionicons name="videocam" size={31} color="#FFF" />
+        </TouchableOpacity>
       </View>
-
-
-
-
-
     </SafeAreaView>
-
   );
-
 }
-
-
-
-
-
-
-const styles = StyleSheet.create({
-
-
-container:{
-  flex:1,
-  backgroundColor:'#FFFDF8',
-  paddingHorizontal:25,
-},
-
-
-
-header:{
-  flexDirection:'row',
-  alignItems:'center',
-  marginTop:25,
-},
-
-
-
-back:{
-  fontSize:40,
-  marginRight:35,
-},
-
-
-
-title:{
-  fontSize:20,
-  fontStyle:'italic',
-  fontWeight:'700',
-},
-
-
-
-infoRow:{
-  flexDirection:'row',
-},
-
-
-
-info:{
-  fontSize:11,
-  marginRight:15,
-},
-
-
-
-
-camera:{
-  width:'100%',
-  height:130,
-  marginTop:15,
-},
-
-
-
-
-fullscreen:{
-  alignSelf:'center',
-  backgroundColor:'#999',
-  paddingHorizontal:12,
-  borderRadius:10,
-},
-
-
-
-fullText:{
-  color:'white',
-  fontSize:11,
-},
-
-
-
-
-line:{
-  borderBottomWidth:1,
-  borderColor:'#ddd',
-  marginTop:8,
-},
-
-
-
-captureTitle:{
-  textAlign:'center',
-  fontWeight:'bold',
-  marginTop:5,
-},
-
-
-
-count:{
-  textAlign:'center',
-  fontWeight:'bold',
-},
-
-
-
-
-
-snapshotRow:{
-  flexDirection:'row',
-  alignItems:'center',
-  justifyContent:'space-between',
-  marginTop:10,
-},
-
-
-
-snapshot:{
-  width:165,
-  height:95,
-  borderRadius:15,
-},
-
-
-
-arrow:{
-  color:'#D06435',
-  fontSize:25,
-},
-
-
-
-
-
-photos:{
-  alignSelf:'center',
-  backgroundColor:'#E5F5F4',
-  paddingHorizontal:20,
-  paddingVertical:5,
-  borderRadius:15,
-},
-
-
-
-photosText:{
-  fontSize:11,
-},
-
-
-
-
-details:{
-  flexDirection:'row',
-  justifyContent:'space-between',
-  marginTop:12,
-},
-
-
-
-
-controls:{
-  height:45,
-  backgroundColor:'#275861',
-  borderRadius:12,
-  marginTop:10,
-  flexDirection:'row',
-  justifyContent:'space-around',
-  alignItems:'center',
-},
-
-
-
-circle:{
-  width:30,
-  height:30,
-  borderRadius:20,
-  backgroundColor:'white',
-  borderWidth:3,
-  borderColor:'#9DBAC0',
-},
-
-
-});

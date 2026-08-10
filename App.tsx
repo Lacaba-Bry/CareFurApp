@@ -1,125 +1,149 @@
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons';
+import React, {
+  useEffect,
+  useState,
+} from 'react';
 
+import {
+  NavigationContainer,
+} from '@react-navigation/native';
+
+import {
+  createNativeStackNavigator,
+} from '@react-navigation/native-stack';
+
+import {
+  ActivityIndicator,
+  StyleSheet,
+  View,
+} from 'react-native';
+
+import {
+  Session,
+} from '@supabase/supabase-js';
+
+import { supabase } from './lib/supabase';
+
+// AUTH SCREENS
 import WelcomeScreen from './Login/WelcomeScreen';
 import LoginScreen from './Login/LoginScreen';
 import SignUpScreen from './Login/SignupScreen';
 
-import HomeScreen from './Login/HomeScreen';
-import PetProfileScreen from './Login/PetProfile';
-import CameraScreen from './Login/CameraScreen';
-import FeedingLogsScreen from './Login/FeedingLogsScreen';
-import ProfileScreen from './Login/ProfileScreen';
+// MAIN NAVIGATION
+import Nav from './Login/Nav/BottomNav';
+
+// OTHER STACK SCREENS
 import EditProfileScreen from './Login/EditProfileScreen';
+import BoardingDetails from './Login/BoardingDetails';
+import Rooms from './Login/Rooms';
+import BookingHistory from './Login/BookingHistory';
 
 const Stack = createNativeStackNavigator();
-const Tab = createBottomTabNavigator();
-
-function MainTabs() {
-  return (
-    <Tab.Navigator
-      initialRouteName="Home"
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: {
-          backgroundColor: '#53B5C2',
-          height: 55,
-          borderTopWidth: 0,
-        },
-        tabBarShowLabel: false,
-        tabBarActiveTintColor: '#fff',
-        tabBarInactiveTintColor: '#fff',
-      }}
-    >
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="home" size={22} color={color} />
-          ),
-        }}
-      />
-
-      <Tab.Screen
-        name="Pets"
-        component={PetProfileScreen}
-        options={{
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="paw" size={22} color={color} />
-          ),
-        }}
-      />
-
-      <Tab.Screen
-        name="Camera"
-        component={CameraScreen}
-        options={{
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="camera" size={22} color={color} />
-          ),
-        }}
-      />
-
-      <Tab.Screen
-        name="Care"
-        component={FeedingLogsScreen}
-        options={{
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="nutrition" size={22} color={color} />
-          ),
-        }}
-      />
-
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="person" size={22} color={color} />
-          ),
-        }}
-      />
-    </Tab.Navigator>
-  );
-}
 
 export default function App() {
+  const [session, setSession] =
+    useState<Session | null>(null);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  useEffect(() => {
+    const loadSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      setSession(session);
+      setLoading(false);
+    };
+
+    loadSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(
+      (_event, currentSession) => {
+        setSession(currentSession);
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator
+          size="large"
+          color="#0B6E71"
+        />
+      </View>
+    );
+  }
+
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="Welcome"
         screenOptions={{
           headerShown: false,
         }}
       >
-        <Stack.Screen
-          name="Welcome"
-          component={WelcomeScreen}
-        />
+        {session ? (
+          <>
+            <Stack.Screen
+              name="MainTabs"
+              component={Nav}
+            />
 
-        <Stack.Screen
-          name="Login"
-          component={LoginScreen}
-        />
+            <Stack.Screen
+              name="EditProfile"
+              component={EditProfileScreen}
+            />
 
-        <Stack.Screen
-          name="SignUp"
-          component={SignUpScreen}
-        />
+            <Stack.Screen
+              name="BoardingDetails"
+              component={BoardingDetails}
+            />
 
-        <Stack.Screen
-          name="MainTabs"
-          component={MainTabs}
-        />
+            <Stack.Screen
+              name="Rooms"
+              component={Rooms}
+            />
 
-        <Stack.Screen
-          name="EditProfile"
-          component={EditProfileScreen}
-        />
+            <Stack.Screen
+              name="BookingHistory"
+              component={BookingHistory}
+            />
+          </>
+        ) : (
+          <>
+            <Stack.Screen
+              name="Welcome"
+              component={WelcomeScreen}
+            />
+
+            <Stack.Screen
+              name="Login"
+              component={LoginScreen}
+            />
+
+            <Stack.Screen
+              name="SignUp"
+              component={SignUpScreen}
+            />
+          </>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFDF8',
+  },
+});

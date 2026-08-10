@@ -2,7 +2,6 @@ import React from 'react';
 
 import {
   SafeAreaView,
-  StyleSheet,
   Text,
   View,
   TouchableOpacity,
@@ -10,61 +9,49 @@ import {
 
 import { Ionicons } from '@expo/vector-icons';
 
+import styles from '../assets/css/HomeScreenStyles';
 
-
-export default function HomeScreen() {
-
+export default function HomeScreen({ navigation }: any) {
   return (
-
     <SafeAreaView style={styles.container}>
-
-
       <View style={styles.content}>
 
-
         {/* HEADER */}
-
         <View style={styles.header}>
-
           <Text style={styles.hello}>
-            Hello
+            Hello,
           </Text>
-
 
           <Text style={styles.name}>
             Beia Ann!
           </Text>
 
-
           <Text style={styles.subtitle}>
             Check on your pet and see how they're doing
           </Text>
-
-
         </View>
 
-
-
-
-
-        {/* BUTTON GRID */}
-
+        {/* DASHBOARD */}
         <View style={styles.grid}>
-
-
           <DashboardCard
             title="Sachi's Profile"
             icon="paw"
             color="#D06435"
+            onPress={() =>
+              navigation.navigate('MainTabs', {
+                screen: 'Pets',
+              })
+            }
           />
-
 
           <DashboardCard
             title="Slot Availability"
             icon="calendar"
             color="#14646B"
+            onPress={() =>
+              navigation.navigate('Rooms')
+            }
           />
-
 
           <DashboardCard
             title="Message Stay"
@@ -72,567 +59,147 @@ export default function HomeScreen() {
             color="#16444A"
           />
 
-
           <DashboardCard
             title="Boarding Details"
             icon="bed"
             color="#B4A276"
+            onPress={() =>
+              navigation.navigate('BoardingDetails')
+            }
           />
-
-
         </View>
 
-
-
-
-
-
-        {/* UPDATE HEADER */}
-
-        <View style={styles.sectionTitle}>
-
-
+        {/* LATEST UPDATE HEADER */}
+        <View style={styles.sectionTitleRow}>
           <Text style={styles.smallTitle}>
             Latest Update
           </Text>
 
+          <View style={styles.mealsTitleRow}>
+            <Text style={styles.smallTitle}>
+              Meals Today:
+            </Text>
 
-          <Text style={styles.smallTitle}>
-            Meals Today
-          </Text>
-
-
+            <View style={styles.percentBadge}>
+              <Text style={styles.percentBadgeText}>
+                67%
+              </Text>
+            </View>
+          </View>
         </View>
 
-
-
-
-
-
-
-        {/* UPDATE */}
-
+        {/* LATEST UPDATE */}
         <View style={styles.updateRow}>
-
-
           <View style={styles.updateBox}>
-
-
             <Text style={styles.time}>
               3:00 PM
             </Text>
-
 
             <Text style={styles.food}>
               Sachi was fed Lunch.
             </Text>
 
-
-            <Text style={styles.view}>
-              View Photo →
-            </Text>
-
-
+            <TouchableOpacity>
+              <Text style={styles.view}>
+                View Photo →
+              </Text>
+            </TouchableOpacity>
           </View>
 
-
-
-
-
-          <View style={styles.circle}>
-
-
+          <View style={styles.progressCircle}>
             <Text style={styles.percent}>
               67%
             </Text>
 
-
             <Text style={styles.done}>
               DONE
             </Text>
-
-
           </View>
-
-
         </View>
 
-
-
-
-
-
-
-        {/* FOOD */}
-
-        <Text style={styles.section}>
-          Food Details:
-        </Text>
-
-
-
-
-
-        <View style={styles.bottomCards}>
-
-
-          <View style={styles.foodCard}>
-
-
-            <Text>
-              🍚 Wet Food
+        {/* FOOD DETAILS */}
+        <View style={styles.bottomSection}>
+          <View style={styles.bottomTitleRow}>
+            <Text style={styles.smallTitle}>
+              Food Details:
             </Text>
 
-
-            <Text>
-              • 2 scoops
+            <Text style={styles.smallTitle}>
+              Next Feeding:
             </Text>
-
-
-            <Text>
-              🍗 Dry Food
-            </Text>
-
-
-            <Text>
-              • 2 scoops
-            </Text>
-
-
           </View>
 
+          <View style={styles.bottomCards}>
+            <View style={styles.foodCard}>
+              <Text style={styles.foodTitle}>
+                🍚 Wet Food
+              </Text>
 
+              <Text style={styles.foodDetail}>
+                ▪ 2 scoops
+              </Text>
 
+              <Text style={styles.foodTitle}>
+                🍗 Dry Food
+              </Text>
 
+              <Text style={styles.foodDetail}>
+                ▪ 2 scoops
+              </Text>
+            </View>
 
-          <View style={styles.feedCard}>
+            <View style={styles.feedCard}>
+              <Text style={styles.dinnerText}>
+                Dinner
+              </Text>
 
+              <Text style={styles.timeBig}>
+                08:00
+              </Text>
 
-            <Text>
-              Dinner
-            </Text>
-
-
-            <Text style={styles.timeBig}>
-              08:00
-            </Text>
-
-
-            <Text>
-              PM
-            </Text>
-
-
+              <Text style={styles.pmText}>
+                PM
+              </Text>
+            </View>
           </View>
-
-
         </View>
-
-
 
       </View>
-
-
     </SafeAreaView>
-
   );
-
 }
 
-
-
-
-
-
-
 function DashboardCard({
-
   title,
   icon,
   color,
-
-}:{
-
-  title:string;
-  icon:any;
-  color:string;
-
+  onPress,
+}: {
+  title: string;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  color: string;
+  onPress?: () => void;
 }) {
-
-
   return (
-
     <TouchableOpacity
-
+      activeOpacity={0.85}
+      onPress={onPress}
       style={[
         styles.card,
         {
-          backgroundColor:color
-        }
+          backgroundColor: color,
+        },
       ]}
-
     >
-
-
       <Ionicons
-
         name={icon}
-
-        size={25}
-
-        color="white"
-
+        size={22}
+        color="#FFFFFF"
       />
-
-
 
       <Text style={styles.cardText}>
         {title}
       </Text>
-
-
-
     </TouchableOpacity>
-
   );
-
 }
-
-
-
-
-
-
-
-
-const styles = StyleSheet.create({
-
-
-  container:{
-
-    flex:1,
-
-    backgroundColor:'#FFFDF8',
-
-  },
-
-
-
-  content:{
-
-    flex:1,
-
-    paddingHorizontal:10,
-
-  },
-
-
-
-  header:{
-
-    marginTop:35,
-
-    marginLeft:18,
-
-  },
-
-
-
-  hello:{
-
-    fontSize:38,
-
-    fontStyle:'italic',
-
-    fontWeight:'700',
-
-  },
-
-
-
-  name:{
-
-    fontSize:40,
-
-    fontStyle:'italic',
-
-    fontWeight:'700',
-
-  },
-
-
-
-  subtitle:{
-
-    fontSize:12,
-
-    color:'#555',
-
-  },
-
-
-
-
-
-  grid:{
-
-    flexDirection:'row',
-
-    flexWrap:'wrap',
-
-    justifyContent:'center',
-
-    marginTop:18,
-
-  },
-
-
-
-
-
-  card:{
-
-    width:'45%',
-
-    height:65,
-
-    borderRadius:12,
-
-    justifyContent:'center',
-
-    alignItems:'center',
-
-    margin:4,
-
-  },
-
-
-
-
-
-  cardText:{
-
-    color:'white',
-
-    fontSize:11,
-
-    marginTop:5,
-
-  },
-
-
-
-
-
-  sectionTitle:{
-
-    flexDirection:'row',
-
-    justifyContent:'space-between',
-
-    marginHorizontal:20,
-
-    marginTop:12,
-
-  },
-
-
-
-
-
-  smallTitle:{
-
-    fontSize:11,
-
-    fontWeight:'bold',
-
-  },
-
-
-
-
-
-  updateRow:{
-
-    flexDirection:'row',
-
-    justifyContent:'space-around',
-
-    alignItems:'center',
-
-    marginTop:8,
-
-  },
-
-
-
-
-
-  updateBox:{
-
-    backgroundColor:'#E7F5F4',
-
-    padding:12,
-
-    borderRadius:12,
-
-    width:200,
-
-  },
-
-
-
-
-
-  time:{
-
-    fontSize:22,
-
-    fontWeight:'bold',
-
-  },
-
-
-
-
-
-  food:{
-
-    fontSize:12,
-
-  },
-
-
-
-
-
-  view:{
-
-    fontSize:10,
-
-    color:'#0B6E71',
-
-    marginTop:5,
-
-  },
-
-
-
-
-
-  circle:{
-
-    width:75,
-
-    height:75,
-
-    borderRadius:40,
-
-    borderWidth:10,
-
-    borderColor:'#D06435',
-
-    justifyContent:'center',
-
-    alignItems:'center',
-
-  },
-
-
-
-
-
-  percent:{
-
-    fontSize:18,
-
-    fontWeight:'bold',
-
-  },
-
-
-
-
-
-  done:{
-
-    fontSize:8,
-
-  },
-
-
-
-
-
-  section:{
-
-    fontWeight:'bold',
-
-    marginTop:10,
-
-    marginLeft:18,
-
-  },
-
-
-
-
-
-  bottomCards:{
-
-    flexDirection:'row',
-
-    justifyContent:'space-around',
-
-    marginTop:5,
-
-  },
-
-
-
-
-
-  foodCard:{
-
-    backgroundColor:'#C9B47C',
-
-    width:'45%',
-
-    padding:10,
-
-    borderRadius:12,
-
-  },
-
-
-
-
-
-  feedCard:{
-
-    backgroundColor:'#A8B4E8',
-
-    width:'45%',
-
-    padding:10,
-
-    borderRadius:12,
-
-    alignItems:'center',
-
-  },
-
-
-
-
-
-  timeBig:{
-
-    fontSize:25,
-
-    fontWeight:'bold',
-
-  },
-
-
-});

@@ -1,444 +1,161 @@
 import React from 'react';
-
 import {
   SafeAreaView,
   View,
   Text,
-  StyleSheet,
-  TouchableOpacity,
   Image,
+  TouchableOpacity,
 } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
-
-
+import styles from '../assets/css/FeedingStyles';
 
 export default function FeedingLogsScreen() {
-
-
   return (
-
     <SafeAreaView style={styles.container}>
-
-
-      {/* HEADER */}
-
       <View style={styles.header}>
+        <TouchableOpacity>
+          <Ionicons name="chevron-back" size={28} color="#111" />
+        </TouchableOpacity>
 
+        <Text style={styles.title}>Feeding Logs</Text>
 
-        <Text style={styles.back}>
-          ‹
-        </Text>
-
-
-        <Text style={styles.title}>
-          Feeding Logs
-        </Text>
-
-
-        <Ionicons
-          name="options-outline"
-          size={22}
-        />
-
-
+        <TouchableOpacity>
+          <Ionicons name="options-outline" size={24} color="#111" />
+        </TouchableOpacity>
       </View>
-
-
-
-
-
-
-      {/* PET CARD */}
 
       <View style={styles.petCard}>
+        <View style={styles.petTopRow}>
+          <Image
+            source={require('../assets/Login/Logo.jpg')}
+            style={styles.petImage}
+          />
 
+          <View style={styles.petInfo}>
+            <Text style={styles.petName}>Sachi</Text>
 
-        <Image
+            <View style={styles.infoRow}>
+              <Text style={styles.info}>🐾 Dog</Text>
+              <Text style={styles.infoDot}>●</Text>
+              <Text style={styles.info}>Shih-Poo</Text>
+              <Text style={styles.infoDot}>●</Text>
+              <Text style={styles.info}>Female</Text>
+            </View>
+          </View>
 
-          source={require('../assets/Login/Logo.jpg')}
-
-          style={styles.petImage}
-
-        />
-
-
-        <View>
-
-          <Text style={styles.petName}>
-            Sachi
-          </Text>
-
-
-          <Text style={styles.info}>
-            🐾 Dog　🏠 Shih-Poo　♀ Female
-          </Text>
-
-
+          <Ionicons
+            name="chevron-down"
+            size={22}
+            color="#111"
+          />
         </View>
 
+        <View style={styles.mealsInsideCard}>
+          <Text style={styles.mealsTitle}>🍽 Meals Today</Text>
 
-        <Text style={styles.arrow}>
-          ⌄
-        </Text>
-
-
+          <View style={styles.mealStatus}>
+            <Text style={styles.completed}>✓ Breakfast</Text>
+            <Text style={styles.completed}>✓ Lunch</Text>
+            <Text style={styles.pending}>⌛ Dinner</Text>
+          </View>
+        </View>
       </View>
 
+      <View style={styles.dateRow}>
+        <Text style={styles.date}>Today, July 19, 2026</Text>
 
-
-
-
-
-      {/* MEALS */}
-
-      <View style={styles.meals}>
-
-
-        <Text>
-          🍽 Meals Today
-        </Text>
-
-
-        <Text>
-          ✓ Breakfast　✓ Lunch　◌ Dinner
-        </Text>
-
-
+        <Ionicons
+          name="calendar-outline"
+          size={20}
+          color="#111"
+        />
       </View>
-
-
-
-
-
-
-
-      <Text style={styles.date}>
-        Today, July 19, 2026
-      </Text>
-
-
-
-
-
-      {/* FILTER */}
 
       <View style={styles.filter}>
+        <TouchableOpacity style={styles.filterActive}>
+          <Text style={styles.filterActiveText}>All</Text>
+        </TouchableOpacity>
 
+        <TouchableOpacity style={styles.filterItem}>
+          <Text style={styles.filterText}>Completed</Text>
+        </TouchableOpacity>
 
-        <Text>
-          All
-        </Text>
-
-
-        <Text>
-          Completed
-        </Text>
-
-
-        <Text>
-          Scheduled
-        </Text>
-
-
+        <TouchableOpacity style={styles.filterItem}>
+          <Text style={styles.filterText}>Scheduled</Text>
+        </TouchableOpacity>
       </View>
 
-
-
-
-
-
-
-      {/* DINNER */}
-
       <FoodLog
-
         color="#C9B47C"
-
         time="8:00 PM — Dinner"
-
         status="⌛"
-
+        compact
       />
 
-
-
-
-
-
-      {/* LUNCH */}
-
       <FoodLog
-
         color="#F49B7D"
-
         time="3:00 PM — Lunch"
-
         status="✓"
-
+        items={[
+          'Dry Food:    2 scoops (Holistic Adult)',
+          'Wet Food:    Aozi Chicken (150 g)',
+          'Water:       Refilled',
+          'Fed By:      Staff - Bryan',
+        ]}
       />
-
-
-
-
-
-
-
-
-      {/* BREAKFAST */}
 
       <FoodLog
-
         color="#55B8C5"
-
         time="9:00 AM — Breakfast"
-
         status="✓"
-
+        items={[
+          'Dry Food:    2 scoops (Holistic Adult)',
+          'Wet Food:    Aozi Chicken (150 g)',
+          'Water:       Refilled',
+          'Fed By:      Staff - Bryan',
+        ]}
       />
-
-
-
-
-
     </SafeAreaView>
-
   );
-
 }
-
-
-
-
-
-
 
 function FoodLog({
-
   color,
-
   time,
-
   status,
+  items,
+  compact = false,
+}: {
+  color: string;
+  time: string;
+  status: string;
+  items?: string[];
+  compact?: boolean;
+}) {
+  return (
+    <View style={[styles.log, { backgroundColor: color }]}>
+      <View style={styles.logHeader}>
+        <Text style={styles.time}>{time}</Text>
+        <Text style={styles.status}>{status}</Text>
+      </View>
 
-}:{
+      {!compact && (
+        <>
+          {items?.map((item, index) => (
+            <View key={index} style={styles.itemRow}>
+              <View style={styles.bullet} />
+              <Text style={styles.item}>{item}</Text>
+            </View>
+          ))}
 
-  color:string;
-
-  time:string;
-
-  status:string;
-
-}){
-
-
-return (
-
-<View style={[styles.log,{backgroundColor:color}]}>
-
-
-<View style={styles.logHeader}>
-
-
-<Text style={styles.time}>
-{time}
-</Text>
-
-
-<Text>
-{status}
-</Text>
-
-
-</View>
-
-
-
-
-
-<Text style={styles.item}>
-○ Dry Food:　2 scoops (Holistic Adult)
-</Text>
-
-
-<Text style={styles.item}>
-○ Wet Food:　Aozi Chicken (150 g)
-</Text>
-
-
-<Text style={styles.item}>
-○ Water:　Refilled
-</Text>
-
-
-<Text style={styles.item}>
-○ Fed By:　Staff - Bryan
-</Text>
-
-
-
-
-<TouchableOpacity style={styles.photoBtn}>
-
-<Text style={styles.photoText}>
-View Feeding Photo →
-</Text>
-
-</TouchableOpacity>
-
-
-
-</View>
-
-);
-
-
+          <TouchableOpacity style={styles.photoBtn}>
+            <Text style={styles.photoText}>
+              View Feeding Photo →
+            </Text>
+          </TouchableOpacity>
+        </>
+      )}
+    </View>
+  );
 }
-
-
-
-
-
-
-
-const styles = StyleSheet.create({
-
-
-container:{
-flex:1,
-backgroundColor:'#FFFDF8',
-paddingHorizontal:15,
-},
-
-
-
-header:{
-flexDirection:'row',
-justifyContent:'space-between',
-alignItems:'center',
-marginTop:20,
-},
-
-
-
-back:{
-fontSize:35,
-},
-
-
-
-title:{
-fontSize:20,
-fontStyle:'italic',
-fontWeight:'700',
-},
-
-
-
-petCard:{
-flexDirection:'row',
-alignItems:'center',
-borderWidth:1,
-borderColor:'#ddd',
-borderRadius:15,
-padding:8,
-marginTop:10,
-},
-
-
-
-petImage:{
-width:40,
-height:40,
-borderRadius:20,
-marginRight:10,
-},
-
-
-
-petName:{
-fontWeight:'bold',
-},
-
-
-
-info:{
-fontSize:10,
-},
-
-
-
-arrow:{
-  marginLeft:'auto',
-},
-
-
-meals:{
-marginTop:8,
-},
-
-
-
-date:{
-fontWeight:'bold',
-marginTop:10,
-},
-
-
-
-filter:{
-flexDirection:'row',
-justifyContent:'space-around',
-backgroundColor:'#eee',
-padding:5,
-borderRadius:10,
-},
-
-
-
-log:{
-borderRadius:15,
-padding:10,
-marginTop:8,
-},
-
-
-
-logHeader:{
-flexDirection:'row',
-justifyContent:'space-between',
-},
-
-
-
-time:{
-fontWeight:'bold',
-},
-
-
-
-item:{
-fontSize:12,
-marginTop:5,
-},
-
-
-
-photoBtn:{
-alignSelf:'flex-end',
-backgroundColor:'#16444A',
-borderRadius:10,
-paddingHorizontal:8,
-paddingVertical:3,
-marginTop:5,
-},
-
-
-
-photoText:{
-fontSize:9,
-color:'white',
-},
-
-
-});
