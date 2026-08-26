@@ -36,6 +36,9 @@ import SignUpScreen from './Login/SignupScreen';
 // BOARDING CODE
 import CodeScreen from './Login/CodeScreen';
 
+// CHAT
+import ChatScreen from './Login/ChatScreen';
+
 // MAIN NAV
 import Nav from './Login/Nav/BottomNav';
 
@@ -429,6 +432,17 @@ export default function App() {
                     savedBoardingData,
                 }
               : undefined
+          }
+        />
+
+        {/* ================================================= */}
+        {/* CHAT */}
+        {/* ================================================= */}
+
+        <Stack.Screen
+          name="Chat"
+          component={
+            ChatScreen
           }
         />
 

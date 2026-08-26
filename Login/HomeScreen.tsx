@@ -17,53 +17,133 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 
 import { supabase } from '../lib/supabase';
+
 import styles from '../assets/css/HomeScreenStyles';
 
 type Booking = {
   id: string;
-  booking_code?: string | null;
-  pet_id?: string | null;
-  room_id?: string | null;
-  check_in_at?: string | null;
-  expected_check_out_at?: string | null;
-  status?: string | null;
-  special_instructions?: string | null;
+
+  booking_code?:
+    string |
+    null;
+
+  pet_id?:
+    string |
+    null;
+
+  room_id?:
+    string |
+    null;
+
+  check_in_at?:
+    string |
+    null;
+
+  expected_check_out_at?:
+    string |
+    null;
+
+  status?:
+    string |
+    null;
+
+  special_instructions?:
+    string |
+    null;
 };
 
 type Pet = {
   id: string;
-  name?: string | null;
-  species?: string | null;
-  breed?: string | null;
-  sex?: string | null;
-  photo_url?: string | null;
-  feeding_notes?: string | null;
+
+  name?:
+    string |
+    null;
+
+  species?:
+    string |
+    null;
+
+  breed?:
+    string |
+    null;
+
+  sex?:
+    string |
+    null;
+
+  photo_url?:
+    string |
+    null;
+
+  feeding_notes?:
+    string |
+    null;
 };
 
 type Room = {
   id: string;
-  room_number?: string | null;
-  room_name?: string | null;
-  status?: string | null;
+
+  room_number?:
+    string |
+    null;
+
+  room_name?:
+    string |
+    null;
+
+  status?:
+    string |
+    null;
 };
 
 type FeedingSchedule = {
   id: string;
+
   booking_id: string;
+
   scheduled_at: string;
-  feeding_method?: string | null;
-  compartment_number?: number | null;
-  portion_grams?: number | null;
-  instructions?: string | null;
-  status?: string | null;
+
+  feeding_method?:
+    string |
+    null;
+
+  compartment_number?:
+    number |
+    null;
+
+  portion_grams?:
+    number |
+    null;
+
+  instructions?:
+    string |
+    null;
+
+  status?:
+    string |
+    null;
 };
 
 type AccessData = {
-  id?: string | null;
-  ownerId?: string | null;
-  invitedEmail?: string | null;
-  expiresAt?: string | null;
-  redeemedAt?: string | null;
+  id?:
+    string |
+    null;
+
+  ownerId?:
+    string |
+    null;
+
+  invitedEmail?:
+    string |
+    null;
+
+  expiresAt?:
+    string |
+    null;
+
+  redeemedAt?:
+    string |
+    null;
 };
 
 export default function HomeScreen({
@@ -73,176 +153,264 @@ export default function HomeScreen({
   const routeParams =
     route?.params ?? {};
 
-  const [booking, setBooking] =
+  const [
+    booking,
+    setBooking,
+  ] =
     useState<Booking | null>(
-      routeParams.booking ?? null
+      routeParams.booking ??
+        null
     );
 
-  const [pet, setPet] =
+  const [
+    pet,
+    setPet,
+  ] =
     useState<Pet | null>(
-      routeParams.pet ?? null
+      routeParams.pet ??
+        null
     );
 
-  const [room, setRoom] =
+  const [
+    room,
+    setRoom,
+  ] =
     useState<Room | null>(
-      routeParams.room ?? null
+      routeParams.room ??
+        null
     );
 
   const [
     feedingSchedules,
     setFeedingSchedules,
-  ] = useState<FeedingSchedule[]>(
-    routeParams.feedingSchedules ?? []
-  );
-
-  const [access, setAccess] =
-    useState<AccessData | null>(
-      routeParams.access ?? null
+  ] =
+    useState<
+      FeedingSchedule[]
+    >(
+      routeParams.feedingSchedules ??
+        []
     );
 
-  const [loading, setLoading] =
+  const [
+    access,
+    setAccess,
+  ] =
+    useState<AccessData | null>(
+      routeParams.access ??
+        null
+    );
+
+  const [
+    loading,
+    setLoading,
+  ] =
     useState(true);
 
-  const [refreshing, setRefreshing] =
+  const [
+    refreshing,
+    setRefreshing,
+  ] =
     useState(false);
 
-  const [error, setError] =
-    useState<string | null>(null);
+  const [
+    error,
+    setError,
+  ] =
+    useState<
+      string |
+      null
+    >(null);
 
   const accessCode =
-    routeParams.accessCode ?? '';
+    routeParams.accessCode ??
+    '';
 
   const ownerEmail =
     routeParams.ownerEmail ??
     routeParams.invitedEmail ??
-    routeParams.access?.invitedEmail ??
+    routeParams.access
+      ?.invitedEmail ??
     null;
 
+  // ============================================================
+  // LOAD BOARDING DATA
+  // ============================================================
+
   const loadBoardingData =
-    useCallback(async () => {
-      try {
-        setError(null);
-
-        if (!accessCode) {
-          setLoading(false);
-          return;
-        }
-
-        const {
-          data,
-          error,
-        } =
-          await supabase.functions.invoke(
-            'verify-booking-code',
-            {
-              body: {
-                code: accessCode,
-              },
-            }
+    useCallback(
+      async () => {
+        try {
+          setError(
+            null
           );
 
-        if (error) {
-          console.error(
-            'Home verify-booking-code error:',
+          if (
+            !accessCode
+          ) {
+            setLoading(
+              false
+            );
+
+            return;
+          }
+
+          const {
+            data,
+            error,
+          } =
+            await supabase.functions.invoke(
+              'verify-booking-code',
+              {
+                body: {
+                  code:
+                    accessCode,
+                },
+              }
+            );
+
+          if (
             error
-          );
+          ) {
+            console.error(
+              'Home verify-booking-code error:',
+              error
+            );
 
-          throw new Error(
-            error.message ||
-              'Unable to refresh boarding information.'
-          );
-        }
+            throw new Error(
+              error.message ||
+                'Unable to refresh boarding information.'
+            );
+          }
 
-        if (!data) {
-          throw new Error(
-            'No response was received from Supabase.'
-          );
-        }
+          if (
+            !data
+          ) {
+            throw new Error(
+              'No response was received from Supabase.'
+            );
+          }
 
-        if (data.error) {
-          throw new Error(
+          if (
             data.error
+          ) {
+            throw new Error(
+              data.error
+            );
+          }
+
+          if (
+            !data.booking
+          ) {
+            throw new Error(
+              'The boarding booking could not be found.'
+            );
+          }
+
+          setBooking(
+            data.booking
+          );
+
+          setPet(
+            data.pet ??
+              null
+          );
+
+          setRoom(
+            data.room ??
+              null
+          );
+
+          setAccess(
+            data.access ??
+              null
+          );
+
+          setFeedingSchedules(
+            data.feedingSchedules ??
+              []
+          );
+
+          console.log(
+            'HOME DATA LOADED'
+          );
+
+          console.log(
+            'Booking:',
+            data.booking
+          );
+
+          console.log(
+            'Pet:',
+            data.pet
+          );
+
+          console.log(
+            'Room:',
+            data.room
+          );
+
+          console.log(
+            'Feeding schedules:',
+            data.feedingSchedules
+          );
+
+          console.log(
+            'Access:',
+            data.access
+          );
+        } catch (
+          err: any
+        ) {
+          console.error(
+            'HomeScreen load error:',
+            err
+          );
+
+          setError(
+            err?.message ||
+              'Unable to load boarding information.'
+          );
+        } finally {
+          setLoading(
+            false
+          );
+
+          setRefreshing(
+            false
           );
         }
+      },
+      [
+        accessCode,
+      ]
+    );
 
-        if (!data.booking) {
-          throw new Error(
-            'The boarding booking could not be found.'
-          );
-        }
-
-        setBooking(
-          data.booking
-        );
-
-        setPet(
-          data.pet ?? null
-        );
-
-        setRoom(
-          data.room ?? null
-        );
-
-        setAccess(
-          data.access ?? null
-        );
-
-        setFeedingSchedules(
-          data.feedingSchedules ?? []
-        );
-
-        console.log(
-          'HOME DATA LOADED'
-        );
-
-        console.log(
-          'Booking:',
-          data.booking
-        );
-
-        console.log(
-          'Pet:',
-          data.pet
-        );
-
-        console.log(
-          'Room:',
-          data.room
-        );
-
-        console.log(
-          'Feeding schedules:',
-          data.feedingSchedules
-        );
-
-        console.log(
-          'Access:',
-          data.access
-        );
-      } catch (err: any) {
-        console.error(
-          'HomeScreen load error:',
-          err
-        );
-
-        setError(
-          err?.message ||
-            'Unable to load boarding information.'
-        );
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-      }
-    }, [accessCode]);
+  // ============================================================
+  // INITIAL
+  // ============================================================
 
   useEffect(() => {
     loadBoardingData();
-  }, [loadBoardingData]);
+  }, [
+    loadBoardingData,
+  ]);
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadBoardingData();
-  };
+  // ============================================================
+  // REFRESH
+  // ============================================================
+
+  const onRefresh =
+    () => {
+      setRefreshing(
+        true
+      );
+
+      loadBoardingData();
+    };
+
+  // ============================================================
+  // DISPLAY DATA
+  // ============================================================
 
   const petName =
     pet?.name ||
@@ -261,24 +429,35 @@ export default function HomeScreen({
       now
     );
 
+  // ============================================================
+  // TODAY FEEDING
+  // ============================================================
+
   const todaySchedules =
     feedingSchedules.filter(
-      (schedule) => {
+      (
+        schedule
+      ) => {
         return (
           getLocalDateKey(
             new Date(
-              schedule.scheduled_at
+              schedule
+                .scheduled_at
             )
-          ) === todayKey
+          ) ===
+          todayKey
         );
       }
     );
 
   const completedToday =
     todaySchedules.filter(
-      (schedule) =>
+      (
+        schedule
+      ) =>
         String(
-          schedule.status || ''
+          schedule.status ||
+            ''
         )
           .trim()
           .toLowerCase() ===
@@ -286,48 +465,73 @@ export default function HomeScreen({
     );
 
   const mealsPercentage =
-    todaySchedules.length > 0
+    todaySchedules.length >
+    0
       ? Math.round(
           (
             completedToday.length /
             todaySchedules.length
-          ) * 100
+          ) *
+            100
         )
       : 0;
 
+  // ============================================================
+  // LATEST COMPLETED FEEDING
+  // ============================================================
+
   const latestCompleted =
-    [...feedingSchedules]
+    [
+      ...feedingSchedules,
+    ]
       .filter(
-        (schedule) =>
+        (
+          schedule
+        ) =>
           String(
-            schedule.status || ''
+            schedule.status ||
+              ''
           )
             .trim()
             .toLowerCase() ===
           'completed'
       )
       .sort(
-        (a, b) =>
+        (
+          a,
+          b
+        ) =>
           new Date(
             b.scheduled_at
           ).getTime() -
           new Date(
             a.scheduled_at
           ).getTime()
-      )[0] ?? null;
+      )[0] ??
+    null;
+
+  // ============================================================
+  // NEXT FEEDING
+  // ============================================================
 
   const nextFeeding =
-    [...feedingSchedules]
+    [
+      ...feedingSchedules,
+    ]
       .filter(
-        (schedule) => {
+        (
+          schedule
+        ) => {
           const scheduledTime =
             new Date(
-              schedule.scheduled_at
+              schedule
+                .scheduled_at
             ).getTime();
 
           const status =
             String(
-              schedule.status || ''
+              schedule.status ||
+                ''
             )
               .trim()
               .toLowerCase();
@@ -335,21 +539,32 @@ export default function HomeScreen({
           return (
             scheduledTime >
               Date.now() &&
-            status !== 'completed' &&
-            status !== 'cancelled' &&
-            status !== 'canceled'
+            status !==
+              'completed' &&
+            status !==
+              'cancelled' &&
+            status !==
+              'canceled'
           );
         }
       )
       .sort(
-        (a, b) =>
+        (
+          a,
+          b
+        ) =>
           new Date(
             a.scheduled_at
           ).getTime() -
           new Date(
             b.scheduled_at
           ).getTime()
-      )[0] ?? null;
+      )[0] ??
+    null;
+
+  // ============================================================
+  // LATEST FEEDING DISPLAY
+  // ============================================================
 
   const latestTime =
     latestCompleted
@@ -362,9 +577,14 @@ export default function HomeScreen({
   const latestMessage =
     latestCompleted
       ? `${petName} was fed ${getMealPeriod(
-          latestCompleted.scheduled_at
+          latestCompleted
+            .scheduled_at
         )}.`
       : 'No completed feeding yet.';
+
+  // ============================================================
+  // NEXT FEEDING DISPLAY
+  // ============================================================
 
   const nextFeedingTime =
     nextFeeding
@@ -373,8 +593,11 @@ export default function HomeScreen({
             .scheduled_at
         )
       : {
-          time: '--:--',
-          period: '',
+          time:
+            '--:--',
+
+          period:
+            '',
         };
 
   const nextMealLabel =
@@ -386,21 +609,35 @@ export default function HomeScreen({
       : 'No Feeding';
 
   const feedingInstructions =
-    nextFeeding?.instructions ||
+    nextFeeding
+      ?.instructions ||
     pet?.feeding_notes ||
-    booking?.special_instructions ||
+    booking
+      ?.special_instructions ||
     'No feeding instructions';
 
-  if (loading) {
+  // ============================================================
+  // LOADING
+  // ============================================================
+
+  if (
+    loading
+  ) {
     return (
       <SafeAreaView
-        style={styles.container}
+        style={
+          styles.container
+        }
       >
         <View
           style={{
             flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
+
+            justifyContent:
+              'center',
+
+            alignItems:
+              'center',
           }}
         >
           <ActivityIndicator
@@ -410,8 +647,11 @@ export default function HomeScreen({
 
           <Text
             style={{
-              marginTop: 10,
-              color: '#14646B',
+              marginTop:
+                10,
+
+              color:
+                '#14646B',
             }}
           >
             Loading boarding information...
@@ -421,13 +661,20 @@ export default function HomeScreen({
     );
   }
 
+  // ============================================================
+  // SCREEN
+  // ============================================================
+
   return (
     <SafeAreaView
-      style={styles.container}
+      style={
+        styles.container
+      }
     >
       <ScrollView
         contentContainerStyle={{
-          flexGrow: 1,
+          flexGrow:
+            1,
         }}
         showsVerticalScrollIndicator={
           false
@@ -444,21 +691,31 @@ export default function HomeScreen({
         }
       >
         <View
-          style={styles.content}
+          style={
+            styles.content
+          }
         >
+          {/* ================================================= */}
           {/* HEADER */}
+          {/* ================================================= */}
 
           <View
-            style={styles.header}
+            style={
+              styles.header
+            }
           >
             <Text
-              style={styles.hello}
+              style={
+                styles.hello
+              }
             >
               Hello,
             </Text>
 
             <Text
-              style={styles.name}
+              style={
+                styles.name
+              }
             >
               {ownerName}!
             </Text>
@@ -472,26 +729,41 @@ export default function HomeScreen({
             </Text>
           </View>
 
+          {/* ================================================= */}
           {/* ERROR */}
+          {/* ================================================= */}
 
           {error && (
             <Text
               style={{
-                color: '#D06435',
-                fontSize: 12,
-                marginTop: 4,
-                marginBottom: 8,
+                color:
+                  '#D06435',
+
+                fontSize:
+                  12,
+
+                marginTop:
+                  4,
+
+                marginBottom:
+                  8,
               }}
             >
               {error}
             </Text>
           )}
 
+          {/* ================================================= */}
           {/* DASHBOARD */}
+          {/* ================================================= */}
 
           <View
-            style={styles.grid}
+            style={
+              styles.grid
+            }
           >
+            {/* PET PROFILE */}
+
             <DashboardCard
               title={`${petName}'s Profile`}
               icon="paw"
@@ -502,7 +774,8 @@ export default function HomeScreen({
                   {
                     petId:
                       pet?.id ??
-                      booking?.pet_id ??
+                      booking
+                        ?.pet_id ??
                       null,
 
                     bookingId:
@@ -516,6 +789,8 @@ export default function HomeScreen({
                 )
               }
             />
+
+            {/* SLOT AVAILABILITY */}
 
             <DashboardCard
               title="Slot Availability"
@@ -531,7 +806,8 @@ export default function HomeScreen({
 
                     roomId:
                       room?.id ??
-                      booking?.room_id ??
+                      booking
+                        ?.room_id ??
                       null,
 
                     room,
@@ -542,11 +818,51 @@ export default function HomeScreen({
               }
             />
 
+            {/* ================================================= */}
+            {/* MESSAGE STAY */}
+            {/* ================================================= */}
+
             <DashboardCard
               title="Message Stay"
               icon="chatbox"
               color="#16444A"
+              onPress={() =>
+                navigation.navigate(
+                  'Chat',
+                  {
+                    bookingId:
+                      booking?.id ??
+                      null,
+
+                    petId:
+                      pet?.id ??
+                      booking
+                        ?.pet_id ??
+                      null,
+
+                    roomId:
+                      room?.id ??
+                      booking
+                        ?.room_id ??
+                      null,
+
+                    booking,
+
+                    pet,
+
+                    room,
+
+                    access,
+
+                    accessCode,
+
+                    ownerEmail,
+                  }
+                )
+              }
             />
+
+            {/* BOARDING DETAILS */}
 
             <DashboardCard
               title="Boarding Details"
@@ -562,12 +878,14 @@ export default function HomeScreen({
 
                     petId:
                       pet?.id ??
-                      booking?.pet_id ??
+                      booking
+                        ?.pet_id ??
                       null,
 
                     roomId:
                       room?.id ??
-                      booking?.room_id ??
+                      booking
+                        ?.room_id ??
                       null,
 
                     booking,
@@ -585,7 +903,9 @@ export default function HomeScreen({
             />
           </View>
 
+          {/* ================================================= */}
           {/* LATEST UPDATE HEADER */}
+          {/* ================================================= */}
 
           <View
             style={
@@ -629,7 +949,9 @@ export default function HomeScreen({
             </View>
           </View>
 
+          {/* ================================================= */}
           {/* LATEST UPDATE */}
+          {/* ================================================= */}
 
           <View
             style={
@@ -697,7 +1019,9 @@ export default function HomeScreen({
             </View>
           </View>
 
+          {/* ================================================= */}
           {/* FOOD DETAILS */}
+          {/* ================================================= */}
 
           <View
             style={
@@ -731,6 +1055,8 @@ export default function HomeScreen({
                 styles.bottomCards
               }
             >
+              {/* FOOD CARD */}
+
               <View
                 style={
                   styles.foodCard
@@ -831,6 +1157,8 @@ export default function HomeScreen({
                 ) : null}
               </View>
 
+              {/* NEXT FEEDING CARD */}
+
               <View
                 style={
                   styles.feedCard
@@ -876,26 +1204,41 @@ export default function HomeScreen({
   );
 }
 
+// ============================================================
+// DASHBOARD CARD
+// ============================================================
+
 function DashboardCard({
   title,
   icon,
   color,
   onPress,
 }: {
-  title: string;
+  title:
+    string;
+
   icon:
     React.ComponentProps<
       typeof Ionicons
     >['name'];
-  color: string;
-  onPress?: () => void;
+
+  color:
+    string;
+
+  onPress?:
+    () => void;
 }) {
   return (
     <TouchableOpacity
-      activeOpacity={0.85}
-      onPress={onPress}
+      activeOpacity={
+        0.85
+      }
+      onPress={
+        onPress
+      }
       style={[
         styles.card,
+
         {
           backgroundColor:
             color,
@@ -919,10 +1262,18 @@ function DashboardCard({
   );
 }
 
+// ============================================================
+// OWNER DISPLAY NAME
+// ============================================================
+
 function getOwnerDisplayName(
-  email?: string | null
+  email?:
+    string |
+    null
 ) {
-  if (!email) {
+  if (
+    !email
+  ) {
     return 'Pet Owner';
   }
 
@@ -935,7 +1286,9 @@ function getOwnerDisplayName(
       )
       .trim();
 
-  if (!localPart) {
+  if (
+    !localPart
+  ) {
     return 'Pet Owner';
   }
 
@@ -943,7 +1296,9 @@ function getOwnerDisplayName(
     .split(' ')
     .filter(Boolean)
     .map(
-      (part) =>
+      (
+        part
+      ) =>
         part
           .charAt(0)
           .toUpperCase() +
@@ -952,15 +1307,21 @@ function getOwnerDisplayName(
     .join(' ');
 }
 
+// ============================================================
+// LOCAL DATE KEY
+// ============================================================
+
 function getLocalDateKey(
-  date: Date
+  date:
+    Date
 ) {
   const year =
     date.getFullYear();
 
   const month =
     String(
-      date.getMonth() + 1
+      date.getMonth() +
+        1
     ).padStart(
       2,
       '0'
@@ -977,11 +1338,18 @@ function getLocalDateKey(
   return `${year}-${month}-${day}`;
 }
 
+// ============================================================
+// TIME
+// ============================================================
+
 function formatTime(
-  value: string
+  value:
+    string
 ) {
   const date =
-    new Date(value);
+    new Date(
+      value
+    );
 
   if (
     Number.isNaN(
@@ -994,18 +1362,30 @@ function formatTime(
   return date.toLocaleTimeString(
     [],
     {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
+      hour:
+        '2-digit',
+
+      minute:
+        '2-digit',
+
+      hour12:
+        true,
     }
   );
 }
 
+// ============================================================
+// TIME PARTS
+// ============================================================
+
 function formatTimeParts(
-  value: string
+  value:
+    string
 ) {
   const date =
-    new Date(value);
+    new Date(
+      value
+    );
 
   if (
     Number.isNaN(
@@ -1013,8 +1393,11 @@ function formatTimeParts(
     )
   ) {
     return {
-      time: '--:--',
-      period: '',
+      time:
+        '--:--',
+
+      period:
+        '',
     };
   }
 
@@ -1022,16 +1405,23 @@ function formatTimeParts(
     date.toLocaleTimeString(
       [],
       {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
+        hour:
+          '2-digit',
+
+        minute:
+          '2-digit',
+
+        hour12:
+          true,
       }
     );
 
   const parts =
     formatted
       .trim()
-      .split(/\s+/);
+      .split(
+        /\s+/
+      );
 
   return {
     time:
@@ -1044,11 +1434,18 @@ function formatTimeParts(
   };
 }
 
+// ============================================================
+// MEAL PERIOD
+// ============================================================
+
 function getMealPeriod(
-  value: string
+  value:
+    string
 ) {
   const date =
-    new Date(value);
+    new Date(
+      value
+    );
 
   if (
     Number.isNaN(
@@ -1061,21 +1458,34 @@ function getMealPeriod(
   const hour =
     date.getHours();
 
-  if (hour < 11) {
+  if (
+    hour <
+    11
+  ) {
     return 'Breakfast';
   }
 
-  if (hour < 16) {
+  if (
+    hour <
+    16
+  ) {
     return 'Lunch';
   }
 
   return 'Dinner';
 }
 
+// ============================================================
+// CAPITALIZE
+// ============================================================
+
 function capitalize(
-  value: string
+  value:
+    string
 ) {
-  if (!value) {
+  if (
+    !value
+  ) {
     return '';
   }
 
