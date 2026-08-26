@@ -34,42 +34,72 @@ export default function LoginScreen({ navigation }: any) {
       </View>
     );
   }
-const handleLogin = async () => {
-  if (!email || !password) {
-    if (Platform.OS === 'web') {
-      window.alert('Please enter email and password');
-    } else {
-      Alert.alert('Error', 'Please enter email and password');
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      if (Platform.OS === 'web') {
+        window.alert('Please enter email and password');
+      } else {
+        Alert.alert('Error', 'Please enter email and password');
+      }
+
+      return;
     }
-    return;
-  }
 
-  setLoading(true);
+    try {
+      setLoading(true);
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email: email.trim().toLowerCase(),
-    password: password,
-  });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password: password,
+      });
 
-  setLoading(false);
+      if (error) {
+        console.log('Login error:', error.message);
 
-  if (error) {
-    console.log('Login error:', error.message);
-    if (Platform.OS === 'web') {
-      window.alert('Login Failed: ' + error.message);
-    } else {
-      Alert.alert('Login Failed', error.message);
+        if (Platform.OS === 'web') {
+          window.alert('Login Failed: ' + error.message);
+        } else {
+          Alert.alert('Login Failed', error.message);
+        }
+
+        return;
+      }
+
+      if (!data.session || !data.user) {
+        throw new Error('Login succeeded but no session was created.');
+      }
+
+      console.log('Login success!');
+      console.log('User ID:', data.user.id);
+
+      // After login, user must enter boarding access code
+      navigation.reset({
+        index: 0,
+        routes: [
+          {
+            name: 'Code',
+          },
+        ],
+      });
+    } catch (error: any) {
+      console.log('Unexpected login error:', error);
+
+      if (Platform.OS === 'web') {
+        window.alert(
+          'Login Failed: ' +
+            (error?.message || 'Something went wrong.')
+        );
+      } else {
+        Alert.alert(
+          'Login Failed',
+          error?.message || 'Something went wrong.'
+        );
+      }
+    } finally {
+      setLoading(false);
     }
-  } else {
-    console.log('Login success!');
-
-    // Go to the main app (Home + tabs)
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'MainTabs' }],
-    });
-  }
-};
+  };
 
   return (
     <SafeAreaView style={styles.container}>
