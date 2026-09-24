@@ -1,270 +1,92 @@
-import {
-  StyleSheet,
-  Dimensions,
-} from 'react-native';
+import { Dimensions, StyleSheet } from 'react-native';
+import { colors } from '../../lib/theme';
 
 const { width } = Dimensions.get('window');
-const isSmallPhone = width < 360;
+const small = width < 360;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFDF8',
-  },
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { minHeight: 72, paddingHorizontal: small ? 14 : 18, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.background },
+  headerButton: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center' },
+  headerTextWrap: { flex: 1, alignItems: 'center' },
+  title: { fontSize: small ? 21 : 23, fontWeight: '900', color: colors.text, letterSpacing: -0.3 },
+  headerSubtitle: { marginTop: 2, fontSize: 9.5, color: colors.textSecondary },
+  content: { paddingHorizontal: small ? 14 : 18, paddingTop: 16, paddingBottom: 96 },
 
-  content: {
-    flex: 1,
-  },
+  dateCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 18, paddingHorizontal: 10, paddingVertical: 11 },
+  dateArrow: { width: 38, height: 38, borderRadius: 12, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  dateArrowDisabled: { backgroundColor: '#F1F4F3' },
+  dateCenter: { flex: 1, alignItems: 'center' },
+  datePrimary: { fontSize: 14, fontWeight: '900', color: colors.text },
+  dateSecondary: { marginTop: 2, fontSize: 9.5, color: colors.textSecondary },
 
-  header: {
-    minHeight: 115,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
+  weekRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10, marginBottom: 12 },
+  dayPill: { width: '13.2%', minHeight: 52, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+  dayPillActive: { backgroundColor: colors.primary },
+  dayPillDisabled: { opacity: 0.35 },
+  dayName: { fontSize: 9, fontWeight: '700', color: colors.textSecondary },
+  dayNameActive: { color: '#DFF4F3' },
+  dayNumber: { marginTop: 4, fontSize: 13, fontWeight: '900', color: colors.text },
+  dayNumberActive: { color: '#FFF' },
 
-  backButton: {
-    position: 'absolute',
-    left: 10,
-    top: 28,
-  },
+  summaryStrip: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 18, paddingVertical: 12, marginBottom: 18 },
+  summaryItem: { flex: 1, alignItems: 'center' },
+  summaryValue: { marginTop: 3, fontSize: 18, fontWeight: '900', color: colors.text },
+  summaryLabel: { marginTop: 1, fontSize: 8.5, color: colors.textSecondary },
+  summaryDivider: { width: 1, height: 34, backgroundColor: colors.border },
 
-  titleContainer: {
-    alignItems: 'center',
-  },
+  mapHeader: { marginBottom: 10 },
+  sectionTitle: { fontSize: 19, fontWeight: '900', color: colors.text },
+  sectionSubtitle: { marginTop: 3, maxWidth: 330, fontSize: 10.5, lineHeight: 15, color: colors.textSecondary },
+  legendInline: { flexDirection: 'row', alignItems: 'center', marginTop: 9 },
+  legendDot: { width: 7, height: 7, borderRadius: 4, marginRight: 4 },
+  legendText: { marginRight: 12, fontSize: 9, color: colors.textSecondary },
 
-  title: {
-    fontFamily: 'DancingScript_700Bold',
-    fontSize: isSmallPhone ? 36 : 42,
-    lineHeight: isSmallPhone ? 40 : 46,
-    color: '#14646B',
-  },
+  floorPlan: { borderRadius: 22, borderWidth: 1, borderColor: colors.border, backgroundColor: '#FBFCFA', padding: 11, overflow: 'hidden' },
+  wingSwitcher: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  wingSwitchButton: { flex: 1, borderRadius: 15, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, paddingVertical: 10, alignItems: 'center' },
+  wingSwitchButtonActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  wingSwitchText: { fontSize: 12, fontWeight: '900', color: colors.text },
+  wingSwitchCount: { marginTop: 2, fontSize: 8.5, color: colors.textSecondary },
+  wingSwitchTextActive: { color: '#FFFFFF' },
+  floorTopBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+  floorSideTitle: { fontSize: 10, fontWeight: '900', letterSpacing: 1.5, color: colors.textMuted },
+  floorStatusPill: { flexDirection: 'row', alignItems: 'center', borderRadius: 999, backgroundColor: colors.primarySoft, paddingHorizontal: 9, paddingVertical: 5 },
+  floorStatusText: { marginLeft: 5, fontSize: 8.5, fontWeight: '700', color: colors.primary },
+  centerAisleSubtext: { marginTop: 1, fontSize: 8, color: colors.textSecondary },
+  floorLegendRow: { marginTop: 8, flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center' },
+  floorLegendText: { marginLeft: 5, fontSize: 8.5, color: colors.textSecondary },
+  wingColumn: { width: '100%' },
+  wingLabelRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 7 },
+  wingLine: { flex: 1, height: 1, backgroundColor: colors.border },
+  wingLabel: { marginHorizontal: 8, fontSize: 8.5, fontWeight: '900', letterSpacing: 1, color: colors.textMuted },
+  wingGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  centerAisle: { marginVertical: 12, minHeight: 52, borderRadius: 15, backgroundColor: colors.sandSoft, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#E8DCC7' },
+  centerAisleIcon: { width: 32, height: 32, borderRadius: 10, backgroundColor: '#FFF', alignItems: 'center', justifyContent: 'center', marginRight: 7 },
+  centerAisleText: { fontSize: 10, fontWeight: '900', letterSpacing: 1.1, color: colors.text },
 
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    marginTop: 2,
-  },
+  roomTile: { width: '48.7%', minHeight: 132, borderWidth: 1.5, borderRadius: 17, overflow: 'hidden', backgroundColor: colors.surface },
+  roomTileStatus: { minHeight: 27, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
+  statusDot: { width: 6, height: 6, borderRadius: 3, marginRight: 5 },
+  statusText: { fontSize: 8.5, fontWeight: '800' },
+  roomTileBody: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8, paddingVertical: 9 },
+  roomIconWrap: { width: 34, height: 34, borderRadius: 11, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
+  roomNumber: { fontSize: 18, fontWeight: '900', color: colors.text },
+  roomName: { marginTop: 2, fontSize: 9, color: colors.textSecondary, maxWidth: '100%' },
+  capacityText: { marginTop: 4, fontSize: 8.5, color: colors.textMuted },
+  emptyWing: { width: '100%', minHeight: 70, alignItems: 'center', justifyContent: 'center' },
+  emptyWingText: { fontSize: 9.5, color: colors.textMuted },
 
-  dateBold: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#111',
-    marginRight: 4,
-  },
+  noticeCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.warningSoft, borderRadius: 14, padding: 11, marginBottom: 10 },
+  noticeText: { flex: 1, marginLeft: 7, fontSize: 10, color: colors.warning },
+  centerState: { minHeight: 220, alignItems: 'center', justifyContent: 'center' },
+  stateText: { marginTop: 9, fontSize: 11, color: colors.textSecondary },
+  emptyCard: { minHeight: 190, borderRadius: 20, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', padding: 24 },
+  emptyTitle: { marginTop: 8, fontSize: 15, fontWeight: '800', color: colors.text },
+  emptyText: { marginTop: 4, textAlign: 'center', fontSize: 10.5, color: colors.textSecondary },
 
-  dateNormal: {
-    fontSize: 11,
-    color: '#666',
-    marginRight: 3,
-  },
-
-  weekRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 7,
-    paddingHorizontal: 6,
-  },
-
-  dayItem: {
-    alignItems: 'center',
-  },
-
-  dayText: {
-    fontSize: 10,
-    color: '#111',
-    marginBottom: 3,
-  },
-
-  dayCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  dayCircleActive: {
-    backgroundColor: '#D7D7D7',
-  },
-
-  dayNumber: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#111',
-  },
-
-  roomArea: {
-    flex: 1,
-    marginTop: 18,
-    position: 'relative',
-  },
-
-  topRoomRow: {
-    height: 78,
-    flexDirection: 'row',
-    borderTopWidth: 2,
-    borderBottomWidth: 2,
-    borderColor: '#111',
-  },
-
-  bottomRoomRow: {
-    height: 78,
-    flexDirection: 'row',
-    marginTop: 76,
-    borderTopWidth: 2,
-    borderBottomWidth: 2,
-    borderColor: '#111',
-  },
-
-  roomBox: {
-    flex: 1,
-    borderLeftWidth: 2,
-    borderRightWidth: 2,
-    borderColor: '#111',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-
-  roomTitle: {
-    fontFamily: 'DancingScript_700Bold',
-    fontSize: 13,
-    color: '#111',
-  },
-
-  roomNumber: {
-    fontSize: 18,
-    color: '#111',
-  },
-
-  occupiedIcon: {
-    position: 'absolute',
-    bottom: 4,
-  },
-
-  playArea: {
-    position: 'absolute',
-    top: 88,
-    alignSelf: 'center',
-    width: 95,
-    height: 55,
-    backgroundColor: '#B9A578',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  playText: {
-    fontFamily: 'DancingScript_700Bold',
-    fontSize: 16,
-    color: '#FFF',
-  },
-
-  rightArrow: {
-    position: 'absolute',
-    right: 2,
-    top: 102,
-  },
-
-  leftArrow: {
-    position: 'absolute',
-    left: 2,
-    top: 83,
-  },
-
-  houseTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-
-  houseBottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 8,
-  },
-
-  houseRoom: {
-    width: '32%',
-    height: 105,
-    backgroundColor: '#E9B2E5',
-    borderWidth: 2,
-    borderColor: '#111',
-    position: 'relative',
-    alignItems: 'center',
-  },
-
-  houseTitle: {
-    fontFamily: 'DancingScript_700Bold',
-    fontSize: 14,
-    marginTop: 7,
-    color: '#111',
-  },
-
-  houseDoor: {
-    position: 'absolute',
-    right: 7,
-    bottom: 8,
-    width: 20,
-    height: 28,
-    borderWidth: 2,
-    borderColor: '#111',
-  },
-
-  houseBed: {
-    position: 'absolute',
-    left: 0,
-    bottom: 7,
-    width: 28,
-    height: 16,
-    borderTopWidth: 2,
-    borderRightWidth: 2,
-    borderColor: '#111',
-  },
-
-  houseOccupied: {
-    position: 'absolute',
-    left: 8,
-    bottom: 19,
-  },
-
-  legend: {
-    alignSelf: 'flex-end',
-    marginRight: 18,
-    marginBottom: 12,
-  },
-
-  legendTitle: {
-    fontSize: 10,
-    color: '#111',
-  },
-
-  legendRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 3,
-  },
-
-  legendText: {
-    fontSize: 10,
-    color: '#444',
-    marginLeft: 3,
-  },
-
-  bottomNav: {
-    height: 58,
-    backgroundColor: '#53B5C2',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-
-  navButton: {
-    flex: 1,
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  bottomNav: { height: 66, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', paddingHorizontal: 12 },
+  navButton: { width: 48, height: 42, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
 });
 
 export default styles;

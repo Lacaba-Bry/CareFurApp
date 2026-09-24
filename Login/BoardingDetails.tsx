@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
-
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -15,1258 +9,282 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import { Ionicons } from '@expo/vector-icons';
-
-import {
-  useFonts,
-  DancingScript_700Bold,
-} from '@expo-google-fonts/dancing-script';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { supabase } from '../lib/supabase';
-
+import { colors } from '../lib/theme';
 import styles from '../assets/css/BoardingDetailsStyles';
 
-const BOARDING_CODE_STORAGE_KEY =
-  'boarding_access_code';
-
-// ============================================================
-// TYPES
-// ============================================================
+const BOARDING_CODE_STORAGE_KEY = 'boarding_access_code';
 
 type Booking = {
   id: string;
-
   booking_code?: string | null;
-
-  pet_id?: string | null;
-
-  room_id?: string | null;
-
   status?: string | null;
-
   check_in_at?: string | null;
-
   expected_check_out_at?: string | null;
-
+  actual_check_out_at?: string | null;
   special_instructions?: string | null;
-
-  package?: string | null;
-
-  package_name?: string | null;
-
-  assigned_staff?: string | null;
 };
 
 type Pet = {
   id: string;
-
   name?: string | null;
-
   species?: string | null;
-
   breed?: string | null;
-
   sex?: string | null;
-
   photo_url?: string | null;
-
   feeding_notes?: string | null;
 };
 
 type Room = {
   id: string;
-
   room_number?: string | null;
-
   room_name?: string | null;
-
   capacity?: number | null;
-
   status?: string | null;
 };
 
 type FeedingSchedule = {
   id: string;
-
-  booking_id: string;
-
   scheduled_at: string;
-
   feeding_method?: string | null;
-
   compartment_number?: number | null;
-
   portion_grams?: number | null;
-
   instructions?: string | null;
-
   status?: string | null;
 };
 
-// ============================================================
-// SCREEN
-// ============================================================
+export default function BoardingDetails({ navigation, route }: any) {
+  const params = route?.params ?? {};
+  const [booking, setBooking] = useState<Booking | null>(params.booking ?? null);
+  const [pet, setPet] = useState<Pet | null>(params.pet ?? null);
+  const [room, setRoom] = useState<Room | null>(params.room ?? null);
+  const [feedings, setFeedings] = useState<FeedingSchedule[]>(params.feedingSchedules ?? []);
+  const [loading, setLoading] = useState(!params.booking);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-export default function BoardingDetails({
-  navigation,
-  route,
-}: any) {
-  const [fontsLoaded] = useFonts({
-    DancingScript_700Bold,
-  });
+  const loadData = useCallback(async () => {
+    try {
+      setError(null);
+      const code = params.accessCode || await AsyncStorage.getItem(BOARDING_CODE_STORAGE_KEY);
+      if (!code) throw new Error('No active boarding access code was found.');
 
-  const routeParams =
-    route?.params ?? {};
+      const { data, error: functionError } = await supabase.functions.invoke('verify-booking-code', { body: { code } });
+      if (functionError) throw new Error(functionError.message || 'Unable to load boarding details.');
+      if (data?.error) throw new Error(data.error);
+      if (!data?.booking) throw new Error('Boarding information could not be found.');
 
-  const [booking, setBooking] =
-    useState<Booking | null>(
-      routeParams.booking ?? null
-    );
+      setBooking(data.booking);
+      setPet(data.pet ?? null);
+      setRoom(data.room ?? null);
+      setFeedings(data.feedingSchedules ?? []);
+    } catch (err: any) {
+      console.error('BoardingDetails error:', err);
+      setError(err?.message || 'Unable to load boarding details.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [params.accessCode]);
 
-  const [pet, setPet] =
-    useState<Pet | null>(
-      routeParams.pet ?? null
-    );
+  useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
 
-  const [room, setRoom] =
-    useState<Room | null>(
-      routeParams.room ?? null
-    );
-
-  const [
-    feedingSchedules,
-    setFeedingSchedules,
-  ] = useState<FeedingSchedule[]>(
-    routeParams.feedingSchedules ?? []
+  const sortedFeedings = useMemo(
+    () => [...feedings].sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()),
+    [feedings]
   );
 
-  const [loading, setLoading] =
-    useState(false);
+  const todaysFeedings = useMemo(() => {
+    const today = new Date();
+    return sortedFeedings.filter((feeding) => isSameDay(new Date(feeding.scheduled_at), today));
+  }, [sortedFeedings]);
 
-  const [refreshing, setRefreshing] =
-    useState(false);
+  const displayFeedings = todaysFeedings.length ? todaysFeedings : sortedFeedings.slice(0, 6);
 
-  const [error, setError] =
-    useState<string | null>(null);
-
-  // ============================================================
-  // LOAD LATEST BOARDING INFORMATION
-  // ============================================================
-
-  const loadBoardingDetails =
-    useCallback(async () => {
-      try {
-        setError(null);
-
-        const savedCode =
-          await AsyncStorage.getItem(
-            BOARDING_CODE_STORAGE_KEY
-          );
-
-        if (!savedCode) {
-          return;
-        }
-
-        const {
-          data,
-          error: functionError,
-        } =
-          await supabase.functions.invoke(
-            'verify-booking-code',
-            {
-              body: {
-                code: savedCode,
-              },
-            }
-          );
-
-        if (functionError) {
-          console.error(
-            'BoardingDetails verify error:',
-            functionError
-          );
-
-          throw new Error(
-            functionError.message ||
-              'Unable to load boarding details.'
-          );
-        }
-
-        if (!data) {
-          throw new Error(
-            'No response was received from Supabase.'
-          );
-        }
-
-        if (data.error) {
-          throw new Error(
-            data.error
-          );
-        }
-
-        if (!data.booking) {
-          throw new Error(
-            'Boarding information could not be found.'
-          );
-        }
-
-        setBooking(
-          data.booking
-        );
-
-        setPet(
-          data.pet ?? null
-        );
-
-        setRoom(
-          data.room ?? null
-        );
-
-        setFeedingSchedules(
-          data.feedingSchedules ?? []
-        );
-
-        console.log(
-          'BOARDING DETAILS LOADED'
-        );
-
-        console.log(
-          'Booking:',
-          data.booking
-        );
-
-        console.log(
-          'Pet:',
-          data.pet
-        );
-
-        console.log(
-          'Room:',
-          data.room
-        );
-
-        console.log(
-          'Feeding:',
-          data.feedingSchedules
-        );
-      } catch (err: any) {
-        console.error(
-          'BoardingDetails error:',
-          err
-        );
-
-        setError(
-          err?.message ||
-            'Unable to load boarding details.'
-        );
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-      }
-    }, []);
-
-  // ============================================================
-  // INITIAL LOAD
-  // ============================================================
-
-  useEffect(() => {
-    if (!booking) {
-      setLoading(true);
-    }
-
-    loadBoardingDetails();
-  }, [loadBoardingDetails]);
-
-  // ============================================================
-  // REFRESH
-  // ============================================================
-
-  const onRefresh = () => {
-    setRefreshing(true);
-
-    loadBoardingDetails();
-  };
-
-  // ============================================================
-  // DISPLAY VALUES
-  // ============================================================
-
-  const petName =
-    pet?.name ||
-    'Your Pet';
-
-  const petSpecies =
-    capitalize(
-      pet?.species ||
-        'Pet'
-    );
-
-  const petBreed =
-    pet?.breed ||
-    'Unknown Breed';
-
-  const petSex =
-    capitalize(
-      pet?.sex ||
-        'Unknown'
-    );
-
-  const roomNumber =
-    room?.room_number ||
-    '—';
-
-  const packageName =
-    booking?.package_name ||
-    booking?.package ||
-    '—';
-
-  const checkIn =
-    booking?.check_in_at
-      ? formatDate(
-          booking.check_in_at
-        )
-      : '—';
-
-  const checkOut =
-    booking
-      ?.expected_check_out_at
-      ? formatDate(
-          booking.expected_check_out_at
-        )
-      : '—';
-
-  const remainingDays =
-    booking
-      ?.expected_check_out_at
-      ? calculateRemainingDays(
-          booking.expected_check_out_at
-        )
-      : 0;
-
-  const specialNotes =
-    booking
-      ?.special_instructions
-      ?.trim() ||
-    'No special notes';
-
-  const assignedStaff =
-    booking
-      ?.assigned_staff
-      ?.trim() ||
-    'Not assigned';
-
-  // ============================================================
-  // PET IMAGE
-  // ============================================================
-
-  const petImageSource =
-    pet?.photo_url
-      ? {
-          uri:
-            pet.photo_url,
-        }
-      : require(
-          '../assets/Login/DogProfile.jpg'
-        );
-
-  // ============================================================
-  // FEEDING INFORMATION
-  // ============================================================
-
-  const sortedFeedings =
-    useMemo(() => {
-      return [
-        ...feedingSchedules,
-      ].sort(
-        (a, b) =>
-          new Date(
-            a.scheduled_at
-          ).getTime() -
-          new Date(
-            b.scheduled_at
-          ).getTime()
-      );
-    }, [
-      feedingSchedules,
-    ]);
-
-  // ============================================================
-  // FONT
-  // ============================================================
-
-  if (!fontsLoaded) {
-    return null;
-  }
-
-  // ============================================================
-  // LOADING
-  // ============================================================
-
-  if (
-    loading &&
-    !booking
-  ) {
-    return (
-      <SafeAreaView
-        style={styles.container}
-      >
-        <View
-          style={{
-            flex: 1,
-
-            alignItems:
-              'center',
-
-            justifyContent:
-              'center',
-          }}
-        >
-          <ActivityIndicator
-            size="large"
-            color="#14646B"
-          />
-
-          <Text
-            style={{
-              marginTop:
-                10,
-
-              color:
-                '#14646B',
-            }}
-          >
-            Loading boarding
-            details...
-          </Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // ============================================================
-  // SCREEN
-  // ============================================================
+  const petImage = pet?.photo_url ? { uri: pet.photo_url } : require('../assets/Login/DogProfile.jpg');
+  const remainingDays = booking?.expected_check_out_at
+    ? Math.max(0, Math.ceil((new Date(booking.expected_check_out_at).getTime() - Date.now()) / 86400000))
+    : 0;
+  const statusTone = getStatusTone(booking?.status);
 
   return (
-    <SafeAreaView
-      style={
-        styles.container
-      }
-    >
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={25} color={colors.primaryDark} />
+        </TouchableOpacity>
+        <View style={styles.headerTextWrap}>
+          <Text style={styles.title}>Boarding Details</Text>
+          <Text style={styles.headerSubtitle}>Current stay overview</Text>
+        </View>
+        <View style={styles.headerButton} />
+      </View>
+
       <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-        }}
-        showsVerticalScrollIndicator={
-          false
-        }
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.content}
         refreshControl={
           <RefreshControl
-            refreshing={
-              refreshing
-            }
-            onRefresh={
-              onRefresh
-            }
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              loadData();
+            }}
+            tintColor={colors.primary}
           />
         }
       >
-        <View
-          style={
-            styles.content
-          }
-        >
-          {/* HEADER */}
-
-          <View
-            style={
-              styles.header
-            }
-          >
-            <TouchableOpacity
-              style={
-                styles.backButton
-              }
-              onPress={() =>
-                navigation.goBack()
-              }
-            >
-              <Ionicons
-                name="chevron-back"
-                size={28}
-                color="#111"
-              />
-            </TouchableOpacity>
-
-            <View
-              style={
-                styles.titleContainer
-              }
-            >
-              <Text
-                style={
-                  styles.title
-                }
-              >
-                Boarding
-              </Text>
-
-              <Text
-                style={
-                  styles.title
-                }
-              >
-                Details
-              </Text>
-            </View>
+        {loading && !booking ? (
+          <View style={styles.centerState}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.stateText}>Loading boarding details...</Text>
           </View>
+        ) : (
+          <>
+            {error ? (
+              <View style={styles.notice}>
+                <Ionicons name="alert-circle-outline" size={18} color={colors.warning} />
+                <Text style={styles.noticeText}>{error}</Text>
+              </View>
+            ) : null}
 
-          {/* ERROR */}
-
-          {error ? (
-            <Text
-              style={{
-                color:
-                  '#D06435',
-
-                fontSize:
-                  12,
-
-                marginBottom:
-                  8,
-              }}
-            >
-              {error}
-            </Text>
-          ) : null}
-
-          {/* PET CARD */}
-
-          <View
-            style={
-              styles.petCard
-            }
-          >
-            <Image
-              source={
-                petImageSource
-              }
-              style={
-                styles.petImage
-              }
-            />
-
-            <View
-              style={
-                styles.petInfo
-              }
-            >
-              <Text
-                style={
-                  styles.petName
-                }
-              >
-                {petName}
-              </Text>
-
-              <View
-                style={
-                  styles.petDescription
-                }
-              >
-                <View
-                  style={
-                    styles.petDetail
-                  }
-                >
-                  <View
-                    style={
-                      styles.dot
-                    }
-                  />
-
-                  <Text
-                    style={
-                      styles.petText
-                    }
-                  >
-                    {petSpecies}
-                  </Text>
-                </View>
-
-                <View
-                  style={
-                    styles.petDetail
-                  }
-                >
-                  <View
-                    style={
-                      styles.dot
-                    }
-                  />
-
-                  <Text
-                    style={
-                      styles.petText
-                    }
-                  >
-                    {petBreed}
-                  </Text>
-                </View>
-
-                <View
-                  style={
-                    styles.petDetail
-                  }
-                >
-                  <View
-                    style={
-                      styles.dot
-                    }
-                  />
-
-                  <Text
-                    style={
-                      styles.petText
-                    }
-                  >
-                    {petSex}
-                  </Text>
+            <View style={styles.heroCard}>
+              <Image source={petImage} style={styles.petImage} />
+              <View style={styles.petInfo}>
+                <Text style={styles.petName}>{pet?.name || 'Your Pet'}</Text>
+                <Text style={styles.petMeta}>{[capitalize(pet?.species), pet?.breed, capitalize(pet?.sex)].filter(Boolean).join(' • ') || 'Pet'}</Text>
+                <View style={[styles.statusBadge, { backgroundColor: statusTone.bg }]}>
+                  <View style={[styles.statusDot, { backgroundColor: statusTone.color }]} />
+                  <Text style={[styles.statusText, { color: statusTone.color }]}>{statusTone.label}</Text>
                 </View>
               </View>
-            </View>
-
-            <Ionicons
-              name="chevron-down"
-              size={22}
-              color="#111"
-            />
-          </View>
-
-          {/* ROOM + PACKAGE */}
-
-          <View
-            style={
-              styles.topCards
-            }
-          >
-            <View
-              style={
-                styles.smallCard
-              }
-            >
-              <Text
-                style={
-                  styles.orangeHeader
-                }
-              >
-                Room Number
-              </Text>
-
-              <View
-                style={
-                  styles.smallCardBody
-                }
-              >
-                <Text
-                  style={
-                    styles.bigValue
-                  }
-                >
-                  {roomNumber}
-                </Text>
+              <View style={styles.daysPill}>
+                <Text style={styles.daysValue}>{remainingDays}</Text>
+                <Text style={styles.daysLabel}>days left</Text>
               </View>
             </View>
 
-            <View
-              style={
-                styles.smallCard
-              }
-            >
-              <Text
-                style={
-                  styles.orangeHeader
-                }
-              >
-                Package
-              </Text>
-
-              <View
-                style={
-                  styles.smallCardBody
-                }
-              >
-                <Text
-                  style={
-                    styles.bigValue
-                  }
-                >
-                  {packageName}
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          {/* MAIN */}
-
-          <View
-            style={
-              styles.mainRow
-            }
-          >
-            {/* FEEDING */}
-
-            <View
-              style={
-                styles.feedingCard
-              }
-            >
-              <Text
-                style={
-                  styles.blueHeader
-                }
-              >
-                Feeding Instructions
-              </Text>
-
-              <View
-                style={
-                  styles.cardContent
-                }
-              >
-                {sortedFeedings
-                  .length ===
-                0 ? (
-                  <Text
-                    style={
-                      styles.description
-                    }
-                  >
-                    • No feeding
-                    schedules
-                  </Text>
-                ) : (
-                  sortedFeedings.map(
-                    (
-                      feeding,
-                      index
-                    ) => (
-                      <View
-                        key={
-                          feeding.id
-                        }
-                        style={{
-                          marginBottom:
-                            8,
-                        }}
-                      >
-                        <Text
-                          style={
-                            styles.label
-                          }
-                        >
-                          {getMealPeriod(
-                            feeding
-                              .scheduled_at
-                          )}
-                        </Text>
-
-                        <Text
-                          style={
-                            styles.description
-                          }
-                        >
-                          •{' '}
-                          {formatTime(
-                            feeding
-                              .scheduled_at
-                          )}
-                        </Text>
-
-                        <Text
-                          style={
-                            styles.description
-                          }
-                        >
-                          •{' '}
-                          {capitalize(
-                            feeding
-                              .feeding_method ||
-                              'Manual'
-                          )}
-                        </Text>
-
-                        {feeding
-                          .portion_grams ? (
-                          <Text
-                            style={
-                              styles.description
-                            }
-                          >
-                            •{' '}
-                            {
-                              feeding
-                                .portion_grams
-                            }
-                            g
-                          </Text>
-                        ) : null}
-
-                        {feeding
-                          .instructions ? (
-                          <Text
-                            style={
-                              styles.description
-                            }
-                          >
-                            •{' '}
-                            {
-                              feeding
-                                .instructions
-                            }
-                          </Text>
-                        ) : null}
-
-                        {index <
-                        sortedFeedings.length -
-                          1 ? (
-                          <View
-                            style={{
-                              height:
-                                4,
-                            }}
-                          />
-                        ) : null}
-                      </View>
-                    )
-                  )
-                )}
-              </View>
-            </View>
-
-            {/* RIGHT */}
-
-            <View
-              style={
-                styles.rightColumn
-              }
-            >
-              {/* SPECIAL NOTES */}
-
-              <View
-                style={
-                  styles.specialCard
-                }
-              >
-                <Text
-                  style={
-                    styles.blueHeader
-                  }
-                >
-                  Special Notes
-                </Text>
-
-                <View
-                  style={
-                    styles.cardContent
-                  }
-                >
-                  <Text
-                    style={
-                      styles.description
-                    }
-                  >
-                    •{' '}
-                    {specialNotes}
-                  </Text>
+            <View style={styles.stayCard}>
+              <View style={styles.roomHeaderRow}>
+                <View style={styles.roomIcon}><Ionicons name="home" size={18} color={colors.primary} /></View>
+                <View style={styles.roomTextWrap}>
+                  <Text style={styles.roomLabel}>Assigned room</Text>
+                  <Text style={styles.roomValue}>{room?.room_number || '—'}{room?.room_name ? ` • ${room.room_name}` : ''}</Text>
                 </View>
               </View>
 
-              {/* STAFF */}
+              <View style={styles.stayDivider} />
 
-              <View
-                style={
-                  styles.staffCard
-                }
-              >
-                <Text
-                  style={
-                    styles.blueHeader
-                  }
-                >
-                  Assigned Staff
-                </Text>
-
-                <View
-                  style={
-                    styles.cardContent
-                  }
-                >
-                  <Text
-                    style={
-                      styles.description
-                    }
-                  >
-                    {
-                      assignedStaff
-                    }
-                  </Text>
-                </View>
-              </View>
-
-              {/* DAYS */}
-
-              <View
-                style={
-                  styles.daysCard
-                }
-              >
-                <Text
-                  style={
-                    styles.blueHeader
-                  }
-                >
-                  Remaining Days
-                </Text>
-
-                <View
-                  style={
-                    styles.daysBody
-                  }
-                >
-                  <Text
-                    style={
-                      styles.daysText
-                    }
-                  >
-                    {remainingDays}{' '}
-                    {remainingDays ===
-                    1
-                      ? 'DAY'
-                      : 'DAYS'}
-                  </Text>
-                </View>
+              <View style={styles.dateTimeline}>
+                <StayDate icon="log-in-outline" label="Check-in" value={formatDate(booking?.check_in_at)} />
+                <View style={styles.timelineConnector}><View style={styles.timelineLine} /></View>
+                <StayDate icon="log-out-outline" label="Check-out" value={formatDate(booking?.actual_check_out_at || booking?.expected_check_out_at)} />
               </View>
             </View>
-          </View>
 
-          {/* DATES */}
-
-          <View
-            style={
-              styles.dateCard
-            }
-          >
-            <View
-              style={
-                styles.dateHeader
-              }
-            >
-              <Text
-                style={
-                  styles.dateHeaderText
-                }
-              >
-                Check-in
-              </Text>
-
-              <Text
-                style={
-                  styles.dateHeaderText
-                }
-              >
-                Check-out
-              </Text>
+            <View style={styles.sectionHeaderRow}>
+              <View>
+                <Text style={styles.sectionTitle}>{todaysFeedings.length ? "Today's Feeding Plan" : 'Feeding Plan'}</Text>
+                <Text style={styles.sectionSubtitle}>{todaysFeedings.length ? 'Meals scheduled for today.' : 'Upcoming meals for this stay.'}</Text>
+              </View>
+              <View style={styles.countPill}><Text style={styles.countText}>{displayFeedings.length}</Text></View>
             </View>
 
-            <View
-              style={
-                styles.dateBody
-              }
-            >
-              <Text
-                style={
-                  styles.dateText
-                }
-              >
-                {checkIn}
-              </Text>
-
-              <Ionicons
-                name="arrow-forward"
-                size={20}
-                color="#111"
-              />
-
-              <Text
-                style={
-                  styles.dateText
-                }
-              >
-                {checkOut}
-              </Text>
+            <View style={styles.feedingCard}>
+              {displayFeedings.length === 0 ? (
+                <View style={styles.emptyInline}>
+                  <Ionicons name="restaurant-outline" size={24} color={colors.primary} />
+                  <Text style={styles.emptyInlineText}>No feeding schedule has been added yet.</Text>
+                </View>
+              ) : (
+                displayFeedings.map((feeding, index) => (
+                  <View key={feeding.id} style={[styles.feedingRow, index < displayFeedings.length - 1 && styles.rowBorder]}>
+                    <View style={styles.feedingTimeWrap}>
+                      <Text style={styles.feedingTimeText}>{formatTime(feeding.scheduled_at)}</Text>
+                      <Text style={styles.feedingDate}>{formatShortDate(feeding.scheduled_at)}</Text>
+                    </View>
+                    <View style={styles.feedingInfo}>
+                      <Text style={styles.feedingMethod}>{capitalize(feeding.feeding_method || 'automatic')}</Text>
+                      <Text style={styles.feedingMeta}>
+                        {feeding.portion_grams != null ? `${feeding.portion_grams} g` : 'Portion not set'}
+                        {feeding.compartment_number ? ` • Chamber ${feeding.compartment_number}` : ''}
+                      </Text>
+                      {feeding.instructions ? <Text style={styles.feedingNote} numberOfLines={2}>{feeding.instructions}</Text> : null}
+                    </View>
+                    <StatusChip status={feeding.status || 'pending'} />
+                  </View>
+                ))
+              )}
             </View>
-          </View>
-        </View>
+
+            <Text style={styles.sectionTitle}>Care Notes</Text>
+            <Text style={styles.sectionSubtitle}>Instructions provided for this boarding stay.</Text>
+            <View style={styles.notesCard}>
+              <NoteRow icon="document-text-outline" label="Special instructions" value={booking?.special_instructions || 'No special instructions'} />
+              <View style={styles.rowBorder} />
+              <NoteRow icon="nutrition-outline" label="Feeding notes" value={pet?.feeding_notes || 'No feeding notes'} />
+            </View>
+
+            <View style={styles.bookingCodeCard}>
+              <View style={styles.bookingCodeIcon}><Ionicons name="shield-checkmark" size={19} color={colors.primary} /></View>
+              <View style={styles.bookingCodeText}>
+                <Text style={styles.bookingCodeLabel}>Booking reference</Text>
+                <Text style={styles.bookingCodeValue} numberOfLines={1}>{booking?.booking_code || booking?.id || '—'}</Text>
+              </View>
+            </View>
+          </>
+        )}
       </ScrollView>
-
-      {/* BOTTOM NAV */}
-
-      <View
-        style={
-          styles.bottomNav
-        }
-      >
-        <NavButton
-          icon="home"
-          onPress={() =>
-            navigation.navigate(
-              'MainTabs',
-              {
-                screen:
-                  'Home',
-              }
-            )
-          }
-        />
-
-        <NavButton
-          icon="paw"
-          onPress={() =>
-            navigation.navigate(
-              'MainTabs',
-              {
-                screen:
-                  'Pets',
-              }
-            )
-          }
-        />
-
-        <NavButton
-          icon="camera"
-          onPress={() =>
-            navigation.navigate(
-              'MainTabs',
-              {
-                screen:
-                  'Camera',
-              }
-            )
-          }
-        />
-
-        <NavButton
-          icon="nutrition"
-          onPress={() =>
-            navigation.navigate(
-              'MainTabs',
-              {
-                screen:
-                  'Care',
-              }
-            )
-          }
-        />
-
-        <NavButton
-          icon="person"
-          onPress={() =>
-            navigation.navigate(
-              'MainTabs',
-              {
-                screen:
-                  'Profile',
-              }
-            )
-          }
-        />
-      </View>
     </SafeAreaView>
   );
 }
 
-// ============================================================
-// NAV BUTTON
-// ============================================================
-
-function NavButton({
-  icon,
-  onPress,
-}: {
-  icon:
-    React.ComponentProps<
-      typeof Ionicons
-    >['name'];
-
-  onPress:
-    () => void;
-}) {
+function StayDate({ icon, label, value }: any) {
   return (
-    <TouchableOpacity
-      style={
-        styles.navButton
-      }
-      onPress={
-        onPress
-      }
-    >
-      <Ionicons
-        name={icon}
-        size={23}
-        color="#FFF"
-      />
-    </TouchableOpacity>
+    <View style={styles.stayDateItem}>
+      <View style={styles.stayDateIcon}><Ionicons name={icon} size={16} color={colors.primary} /></View>
+      <Text style={styles.stayDateLabel}>{label}</Text>
+      <Text style={styles.stayDateValue}>{value}</Text>
+    </View>
   );
 }
 
-// ============================================================
-// HELPERS
-// ============================================================
-
-function calculateRemainingDays(
-  value:
-    string
-) {
-  const checkout =
-    new Date(
-      value
-    );
-
-  if (
-    Number.isNaN(
-      checkout.getTime()
-    )
-  ) {
-    return 0;
-  }
-
-  const difference =
-    checkout.getTime() -
-    Date.now();
-
-  return Math.max(
-    0,
-    Math.ceil(
-      difference /
-        (
-          1000 *
-          60 *
-          60 *
-          24
-        )
-    )
-  );
-}
-
-function formatDate(
-  value:
-    string
-) {
-  const date =
-    new Date(
-      value
-    );
-
-  if (
-    Number.isNaN(
-      date.getTime()
-    )
-  ) {
-    return '—';
-  }
-
-  return date.toLocaleDateString(
-    'en-US',
-    {
-      month:
-        'long',
-
-      day:
-        'numeric',
-
-      year:
-        'numeric',
-    }
-  );
-}
-
-function formatTime(
-  value:
-    string
-) {
-  const date =
-    new Date(
-      value
-    );
-
-  if (
-    Number.isNaN(
-      date.getTime()
-    )
-  ) {
-    return '--:--';
-  }
-
-  return date.toLocaleTimeString(
-    [],
-    {
-      hour:
-        '2-digit',
-
-      minute:
-        '2-digit',
-
-      hour12:
-        true,
-    }
-  );
-}
-
-function getMealPeriod(
-  value:
-    string
-) {
-  const date =
-    new Date(
-      value
-    );
-
-  const hour =
-    date.getHours();
-
-  if (
-    hour < 11
-  ) {
-    return 'Breakfast';
-  }
-
-  if (
-    hour < 16
-  ) {
-    return 'Lunch';
-  }
-
-  return 'Dinner';
-}
-
-function capitalize(
-  value:
-    string
-) {
-  if (
-    !value
-  ) {
-    return '';
-  }
-
+function StatusChip({ status }: { status: string }) {
+  const done = status === 'completed';
+  const missed = status === 'missed' || status === 'cancelled';
+  const color = done ? colors.success : missed ? colors.danger : colors.warning;
+  const bg = done ? colors.successSoft : missed ? colors.dangerSoft : colors.warningSoft;
   return (
-    value
-      .charAt(0)
-      .toUpperCase() +
-    value.slice(1)
+    <View style={[styles.smallStatus, { backgroundColor: bg }]}>
+      <Text style={[styles.smallStatusText, { color }]}>{capitalize(status)}</Text>
+    </View>
   );
 }
+
+function NoteRow({ icon, label, value }: any) {
+  return (
+    <View style={styles.infoRow}>
+      <View style={styles.infoIcon}><Ionicons name={icon} size={18} color={colors.primary} /></View>
+      <View style={styles.infoText}>
+        <Text style={styles.infoLabel}>{label}</Text>
+        <Text style={styles.infoValue}>{value}</Text>
+      </View>
+    </View>
+  );
+}
+
+function getStatusTone(status?: string | null) {
+  if (status === 'checked_in') return { label: 'Checked in', color: colors.success, bg: colors.successSoft };
+  if (status === 'checked_out') return { label: 'Checked out', color: colors.textSecondary, bg: '#EEF2F1' };
+  if (status === 'cancelled') return { label: 'Cancelled', color: colors.danger, bg: colors.dangerSoft };
+  return { label: 'Upcoming stay', color: colors.warning, bg: colors.warningSoft };
+}
+function formatDate(value?: string | null) { if (!value) return '—'; const d = new Date(value); if (Number.isNaN(d.getTime())) return '—'; return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+function formatShortDate(value: string) { const d = new Date(value); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
+function formatTime(value: string) { const d = new Date(value); return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }); }
+function capitalize(value?: string | null) { if (!value) return ''; return value.charAt(0).toUpperCase() + value.slice(1).replaceAll('_', ' '); }
+function isSameDay(a: Date, b: Date) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }

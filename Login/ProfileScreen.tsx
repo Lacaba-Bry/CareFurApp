@@ -1,753 +1,290 @@
-import React, {
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
-
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   Image,
   Platform,
   SafeAreaView,
+  ScrollView,
   Switch,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { supabase } from '../lib/supabase';
-
+import { colors } from '../lib/theme';
 import styles from '../assets/css/ProfileScreenStyles';
 
-const BOARDING_CODE_STORAGE_KEY =
-  'boarding_access_code';
+const BOARDING_CODE_STORAGE_KEY = 'boarding_access_code';
+const NOTIFICATIONS_STORAGE_KEY = 'carefur_notifications_enabled';
 
-type UserProfile = {
+type OwnerProfile = {
   id: string;
   full_name?: string | null;
   email?: string | null;
   phone?: string | null;
+  notes?: string | null;
   avatar_url?: string | null;
-  role?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
 };
 
-type AccessData = {
-  id?: string | null;
-  ownerId?: string | null;
-  invitedEmail?: string | null;
-  expiresAt?: string | null;
-  redeemedAt?: string | null;
-};
-
-export default function ProfileScreen({
-  navigation,
-  route,
-}: any) {
-  const routeParams =
-    route?.params ?? {};
-
-  const access: AccessData | null =
-    routeParams.access ?? null;
-
+export default function ProfileScreen({ navigation, route }: any) {
+  const params = route?.params ?? {};
   const passedOwnerEmail =
-    routeParams.ownerEmail ??
-    routeParams.invitedEmail ??
-    access?.invitedEmail ??
-    null;
+    params.ownerEmail ?? params.invitedEmail ?? params.access?.invitedEmail ?? null;
 
-  const [profile, setProfile] =
-    useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<OwnerProfile | null>(null);
+  const [authEmail, setAuthEmail] = useState<string | null>(null);
+  const [authName, setAuthName] = useState<string | null>(null);
+  const [authAvatar, setAuthAvatar] = useState<string | null>(null);
+  const [isGuest, setIsGuest] = useState(false);
+  const [notifications, setNotifications] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const [authEmail, setAuthEmail] =
-    useState<string | null>(null);
+  const loadProfile = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  const [authName, setAuthName] =
-    useState<string | null>(null);
-
-  const [isGuest, setIsGuest] =
-    useState(false);
-
-  const [notifications, setNotifications] =
-    useState(true);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [loggingOut, setLoggingOut] =
-    useState(false);
-
-  const [error, setError] =
-    useState<string | null>(null);
-
-  useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const {
-          data: sessionData,
-          error: sessionError,
-        } =
-          await supabase.auth.getSession();
-
-        if (sessionError) {
-          console.error(
-            'Profile session error:',
-            sessionError
-          );
-        }
-
-        const session =
-          sessionData.session;
-
-        // =====================================================
-        // GUEST
-        // =====================================================
-
-        if (!session?.user) {
-          setIsGuest(true);
-          setProfile(null);
-          return;
-        }
-
-        setIsGuest(false);
-
-        setAuthEmail(
-          session.user.email ??
-          null
-        );
-
-        setAuthName(
-          session.user.user_metadata?.full_name ??
-          session.user.user_metadata?.name ??
-          null
-        );
-
-        // =====================================================
-        // FETCH PUBLIC.USERS PROFILE
-        // =====================================================
-
-        const {
-          data,
-          error,
-        } = await supabase
-          .from('users')
-          .select(`
-            id,
-            full_name,
-            email,
-            phone,
-            avatar_url,
-            role,
-            created_at,
-            updated_at
-          `)
-          .eq(
-            'id',
-            session.user.id
-          )
-          .maybeSingle();
-
-        if (error) {
-          console.error(
-            'Profile fetch error:',
-            error
-          );
-
-          setError(
-            error.message ||
-            'Unable to load your profile.'
-          );
-
-          return;
-        }
-
-        if (!data) {
-          console.log(
-            'No public.users profile found. Using Auth fallback.'
-          );
-
-          setProfile(null);
-
-          setError(null);
-
-          return;
-        }
-
-        setProfile(data);
-      } catch (err: any) {
-        console.error(
-          'Profile load error:',
-          err
-        );
-
-        setError(
-          err?.message ||
-          'Unable to load profile.'
-        );
-      } finally {
-        setLoading(false);
+      const savedNotificationSetting = await AsyncStorage.getItem(NOTIFICATIONS_STORAGE_KEY);
+      if (savedNotificationSetting !== null) {
+        setNotifications(savedNotificationSetting === 'true');
       }
-    };
 
-    loadProfile();
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+
+      const user = sessionData.session?.user;
+      if (!user) {
+        setIsGuest(true);
+        setProfile(null);
+        return;
+      }
+
+      setIsGuest(false);
+      setAuthEmail(user.email ?? null);
+      setAuthName(user.user_metadata?.full_name ?? user.user_metadata?.name ?? null);
+      setAuthAvatar(user.user_metadata?.avatar_url ?? null);
+
+      // Owner accounts are created in public.owners by SignupScreen.
+      const { data: ownerData, error: ownerError } = await supabase
+        .from('owners')
+        .select('id,full_name,email,phone,notes')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (ownerError) throw ownerError;
+
+      if (ownerData) {
+        setProfile(ownerData);
+        return;
+      }
+
+      // Compatibility fallback for older accounts that may only exist in public.users.
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('id,full_name,email,phone,avatar_url')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (userError) console.warn('users fallback profile warning:', userError);
+      setProfile(userData ?? null);
+    } catch (err: any) {
+      console.error('Profile load error:', err);
+      setError(err?.message || 'Unable to load your profile.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const displayName =
-    useMemo(() => {
-      if (isGuest) {
-        return (
-          getDisplayNameFromEmail(
-            passedOwnerEmail
-          ) || 'Guest'
-        );
-      }
+  useFocusEffect(
+    useCallback(() => {
+      loadProfile();
+    }, [loadProfile])
+  );
 
-      return (
-        profile?.full_name ||
-        authName ||
-        getDisplayNameFromEmail(
-          profile?.email ||
-          authEmail
-        ) ||
-        'Pet Owner'
-      );
-    }, [
-      isGuest,
-      profile,
-      authName,
-      authEmail,
-      passedOwnerEmail,
-    ]);
+  const displayName = useMemo(() => {
+    if (isGuest) return getDisplayNameFromEmail(passedOwnerEmail) || 'Guest';
+    return profile?.full_name || authName || getDisplayNameFromEmail(profile?.email || authEmail) || 'Pet Owner';
+  }, [isGuest, passedOwnerEmail, profile, authName, authEmail]);
 
-  const displayEmail =
-    isGuest
-      ? passedOwnerEmail ||
-        'Guest access'
-      : profile?.email ||
-        authEmail ||
-        '';
+  const displayEmail = isGuest
+    ? passedOwnerEmail || 'Guest access'
+    : profile?.email || authEmail || '';
 
-  const profileImageSource =
-    profile?.avatar_url
-      ? {
-          uri:
-            profile.avatar_url,
-        }
-      : require(
-          '../assets/Login/Logo.jpg'
-        );
+  const profileImageSource = authAvatar
+    ? { uri: authAvatar }
+    : profile?.avatar_url
+      ? { uri: profile.avatar_url }
+      : require('../assets/Login/Logo.jpg');
 
-  // ============================================================
-  // LOGOUT
-  // ============================================================
+  const toggleNotifications = async (value: boolean) => {
+    setNotifications(value);
+    await AsyncStorage.setItem(NOTIFICATIONS_STORAGE_KEY, String(value));
+  };
 
   const logoutUser = async () => {
     try {
       setLoggingOut(true);
-
-      await AsyncStorage.removeItem(
-        BOARDING_CODE_STORAGE_KEY
-      );
-
-      const {
-        data: sessionData,
-      } =
-        await supabase.auth.getSession();
-
-      if (
-        sessionData.session
-      ) {
-        const {
-          error,
-        } =
-          await supabase.auth.signOut();
-
-        if (error) {
-          if (
-            Platform.OS ===
-            'web'
-          ) {
-            window.alert(
-              `Logout Failed: ${error.message}`
-            );
-          } else {
-            Alert.alert(
-              'Logout Failed',
-              error.message
-            );
-          }
-
-          return;
-        }
+      await AsyncStorage.removeItem(BOARDING_CODE_STORAGE_KEY);
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData.session) {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
       }
-
-      navigation.reset({
-        index: 0,
-        routes: [
-          {
-            name: 'Welcome',
-          },
-        ],
-      });
-    } catch (err) {
-      console.error(
-        'Logout error:',
-        err
-      );
-
-      if (
-        Platform.OS === 'web'
-      ) {
-        window.alert(
-          'Something went wrong while logging out.'
-        );
-      } else {
-        Alert.alert(
-          'Error',
-          'Something went wrong while logging out.'
-        );
-      }
+      navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
+    } catch (err: any) {
+      showAlert('Logout failed', err?.message || 'Something went wrong while logging out.');
     } finally {
       setLoggingOut(false);
     }
   };
 
   const handleLogout = () => {
-    const actionText =
-      isGuest
-        ? 'Exit Guest Mode'
-        : 'Log Out';
+    const actionText = isGuest ? 'Exit Guest Mode' : 'Log Out';
+    const message = isGuest ? 'Are you sure you want to leave guest access?' : 'Are you sure you want to log out?';
 
-    const message =
-      isGuest
-        ? 'Are you sure you want to leave guest access?'
-        : 'Are you sure you want to log out?';
-
-    if (
-      Platform.OS ===
-      'web'
-    ) {
-      const confirmed =
-        window.confirm(
-          message
-        );
-
-      if (confirmed) {
-        logoutUser();
-      }
-
+    if (Platform.OS === 'web') {
+      if (window.confirm(message)) logoutUser();
       return;
     }
 
-    Alert.alert(
-      actionText,
-      message,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: actionText,
-          style: 'destructive',
-          onPress: logoutUser,
-        },
-      ]
-    );
-  };
-
-  const requireAccount = (
-    action:
-      () => void
-  ) => {
-    if (!isGuest) {
-      action();
-      return;
-    }
-
-    const message =
-      'This feature is available for registered owner accounts. Please sign up or log in to use it.';
-
-    if (
-      Platform.OS ===
-      'web'
-    ) {
-      window.alert(
-        message
-      );
-    } else {
-      Alert.alert(
-        'Owner Account Required',
-        message
-      );
-    }
+    Alert.alert(actionText, message, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: actionText, style: 'destructive', onPress: logoutUser },
+    ]);
   };
 
   if (loading) {
     return (
-      <SafeAreaView
-        style={styles.container}
-      >
-        <View
-          style={{
-            flex: 1,
-            justifyContent:
-              'center',
-            alignItems:
-              'center',
-          }}
-        >
-          <ActivityIndicator
-            size="large"
-            color="#16444A"
-          />
-
-          <Text
-            style={{
-              marginTop: 10,
-              color: '#16444A',
-            }}
-          >
-            Loading profile...
-          </Text>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.centerState}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.stateText}>Loading profile...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView
-      style={styles.container}
-    >
-      <View
-        style={styles.content}
-      >
-        {/* BACK */}
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <Text style={styles.pageTitle}>Profile</Text>
+          <Text style={styles.pageSubtitle}>Manage your CareFur owner account</Text>
+        </View>
 
-        <TouchableOpacity
-          style={styles.backButton}
-          activeOpacity={0.7}
-          onPress={() =>
-            navigation.goBack()
-          }
-        >
-          <Ionicons
-            name="chevron-back"
-            size={28}
-            color="#111"
-          />
-        </TouchableOpacity>
-
-        {/* PROFILE INFORMATION */}
-
-        <View
-          style={styles.profileRow}
-        >
-          <Image
-            source={
-              profileImageSource
-            }
-            style={
-              styles.profileImage
-            }
-            resizeMode="cover"
-          />
-
-          <View
-            style={
-              styles.profileInfo
-            }
-          >
-            <Text
-              style={styles.name}
-            >
-              {displayName}
-            </Text>
-
-            <Text
-              style={{
-                marginTop: 4,
-                color: '#687879',
-                fontSize: 12,
-              }}
-            >
-              {displayEmail}
-            </Text>
-
-            {isGuest ? (
-              <Text
-                style={{
-                  marginTop: 4,
-                  color: '#D06435',
-                  fontSize: 12,
-                  fontWeight: '600',
-                }}
-              >
-                Guest Access
-              </Text>
+        <View style={styles.profileCard}>
+          <Image source={profileImageSource} style={styles.profileImage} resizeMode="cover" />
+          <View style={styles.profileInfo}>
+            <Text style={styles.name}>{displayName}</Text>
+            <Text style={styles.email}>{displayEmail}</Text>
+            {profile?.phone ? (
+              <View style={styles.phoneRow}>
+                <Ionicons name="call-outline" size={13} color={colors.textSecondary} />
+                <Text style={styles.phoneText}>{profile.phone}</Text>
+              </View>
             ) : null}
+            <View style={[styles.accountBadge, isGuest && styles.guestBadge]}>
+              <Text style={[styles.accountBadgeText, isGuest && styles.guestBadgeText]}>
+                {isGuest ? 'Guest Access' : 'Owner Account'}
+              </Text>
+            </View>
           </View>
         </View>
 
-        {/* ERROR */}
-
         {error ? (
-          <Text
-            style={{
-              color: '#D06435',
-              fontSize: 12,
-              marginBottom: 10,
-            }}
-          >
-            {error}
-          </Text>
+          <View style={styles.errorCard}>
+            <Ionicons name="alert-circle-outline" size={18} color={colors.danger} />
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
         ) : null}
 
-        {/* TITLE */}
-
-        <Text
-          style={
-            styles.sectionTitle
-          }
-        >
-          Information
-        </Text>
-
-        {/* MENU CARD */}
-
-        <View
-          style={styles.menuCard}
-        >
+        <Text style={styles.sectionTitle}>Account</Text>
+        <View style={styles.menuCard}>
           <MenuItem
             icon="create-outline"
-            title={
-              isGuest
-                ? 'Create / Login Account'
-                : 'Edit Profile'
-            }
-            onPress={() => {
-              if (isGuest) {
-                navigation.navigate(
-                  'Welcome'
-                );
-
-                return;
-              }
-
-              navigation.navigate(
-                'EditProfile'
-              );
-            }}
+            title={isGuest ? 'Create / Login Account' : 'Edit Profile'}
+            subtitle={isGuest ? 'Use a registered owner account' : 'Name, phone and owner notes'}
+            onPress={() => navigation.navigate(isGuest ? 'Welcome' : 'EditProfile')}
           />
-
+          <MenuDivider />
           <MenuItem
-            icon="paw"
-            title="Pets"
-            onPress={() =>
-              navigation.navigate(
-                'Pets',
-                {
-                  pet:
-                    routeParams.pet ??
-                    null,
-
-                  booking:
-                    routeParams.booking ??
-                    null,
-                }
-              )
-            }
+            icon="paw-outline"
+            title="Pet Profile"
+            subtitle="View the pet connected to this stay"
+            onPress={() => navigation.navigate('Pets')}
           />
-
+          <MenuDivider />
           <MenuItem
             icon="calendar-outline"
             title="Boarding History"
-            onPress={() =>
-              requireAccount(
-                () =>
-                  navigation.navigate(
-                    'BookingHistory'
-                  )
-              )
-            }
+            subtitle="View previous and current stays"
+            onPress={() => navigation.navigate('BookingHistory', { ...params })}
           />
+        </View>
 
-          <View
-            style={
-              styles.notificationRow
-            }
-          >
-            <View
-              style={styles.menuLeft}
-            >
-              <Ionicons
-                name="notifications-outline"
-                size={24}
-                color="#16444A"
-              />
-
-              <Text
-                style={
-                  styles.notificationText
-                }
-              >
-                Notification
-              </Text>
+        <Text style={styles.sectionTitle}>Preferences</Text>
+        <View style={styles.menuCard}>
+          <View style={styles.notificationRow}>
+            <View style={styles.menuIconWrap}>
+              <Ionicons name="notifications-outline" size={20} color={colors.primary} />
             </View>
-
+            <View style={styles.menuTextWrap}>
+              <Text style={styles.menuText}>Notifications</Text>
+              <Text style={styles.menuSubtitle}>Remember this preference on this device</Text>
+            </View>
             <Switch
               value={notifications}
-              onValueChange={
-                setNotifications
-              }
-              trackColor={{
-                false: '#C8CECD',
-                true: '#9DD5D7',
-              }}
-              thumbColor={
-                notifications
-                  ? '#16444A'
-                  : '#FFFFFF'
-              }
+              onValueChange={toggleNotifications}
+              trackColor={{ false: colors.disabled, true: colors.primaryMuted }}
+              thumbColor={notifications ? colors.primary : '#FFFFFF'}
             />
           </View>
-
-          <TouchableOpacity
-            style={
-              styles.logoutRow
-            }
-            activeOpacity={0.7}
-            disabled={loggingOut}
-            onPress={handleLogout}
-          >
-            <View
-              style={styles.menuLeft}
-            >
-              <Ionicons
-                name={
-                  isGuest
-                    ? 'exit-outline'
-                    : 'log-out-outline'
-                }
-                size={24}
-                color="#D06435"
-              />
-
-              <Text
-                style={
-                  styles.logoutText
-                }
-              >
-                {loggingOut
-                  ? isGuest
-                    ? 'Exiting...'
-                    : 'Logging Out...'
-                  : isGuest
-                  ? 'Exit Guest Mode'
-                  : 'Log Out'}
-              </Text>
-            </View>
-
-            <Ionicons
-              name="chevron-forward"
-              size={24}
-              color="#D06435"
-            />
-          </TouchableOpacity>
         </View>
-      </View>
+
+        <TouchableOpacity style={styles.logoutButton} activeOpacity={0.8} disabled={loggingOut} onPress={handleLogout}>
+          <Ionicons name={isGuest ? 'exit-outline' : 'log-out-outline'} size={20} color={colors.danger} />
+          <Text style={styles.logoutText}>
+            {loggingOut ? (isGuest ? 'Exiting...' : 'Logging out...') : (isGuest ? 'Exit Guest Mode' : 'Log Out')}
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
-function MenuItem({
-  icon,
-  title,
-  onPress,
-}: {
-  icon:
-    React.ComponentProps<
-      typeof Ionicons
-    >['name'];
-
-  title: string;
-
-  onPress?:
-    () => void;
-}) {
+function MenuItem({ icon, title, subtitle, onPress }: any) {
   return (
-    <TouchableOpacity
-      style={styles.menuRow}
-      activeOpacity={0.7}
-      onPress={onPress}
-    >
-      <View
-        style={styles.menuLeft}
-      >
-        <Ionicons
-          name={icon}
-          size={24}
-          color="#16444A"
-        />
-
-        <Text
-          style={
-            styles.menuText
-          }
-        >
-          {title}
-        </Text>
+    <TouchableOpacity style={styles.menuRow} activeOpacity={0.75} onPress={onPress}>
+      <View style={styles.menuIconWrap}>
+        <Ionicons name={icon} size={20} color={colors.primary} />
       </View>
-
-      <Ionicons
-        name="chevron-forward"
-        size={24}
-        color="#111"
-      />
+      <View style={styles.menuTextWrap}>
+        <Text style={styles.menuText}>{title}</Text>
+        <Text style={styles.menuSubtitle}>{subtitle}</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
     </TouchableOpacity>
   );
 }
 
-function getDisplayNameFromEmail(
-  email?:
-    string |
-    null
-) {
-  if (!email) {
-    return '';
-  }
+function MenuDivider() {
+  return <View style={styles.menuDivider} />;
+}
 
-  const localPart =
-    email
-      .split('@')[0]
-      .replace(
-        /[._-]+/g,
-        ' '
-      )
-      .trim();
+function getDisplayNameFromEmail(email?: string | null) {
+  if (!email) return '';
+  const localPart = email.split('@')[0].replace(/[._-]+/g, ' ').trim();
+  return localPart.split(' ').filter(Boolean).map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
+}
 
-  if (!localPart) {
-    return '';
-  }
-
-  return localPart
-    .split(' ')
-    .filter(Boolean)
-    .map(
-      (part) =>
-        part
-          .charAt(0)
-          .toUpperCase() +
-        part.slice(1)
-    )
-    .join(' ');
+function showAlert(title: string, message: string) {
+  if (Platform.OS === 'web') window.alert(`${title}: ${message}`);
+  else Alert.alert(title, message);
 }

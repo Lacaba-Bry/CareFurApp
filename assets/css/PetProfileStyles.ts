@@ -1,497 +1,61 @@
-import {
-  StyleSheet,
-  Dimensions,
-} from 'react-native';
-
-const { width } =
-  Dimensions.get('window');
-
-const small =
-  width < 360;
-
-const styles =
-  StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor:
-        '#FFFDF8',
-    },
-
-    // HEADER
-
-    header: {
-      height: 64,
-      paddingHorizontal: 18,
-
-      flexDirection:
-        'row',
-
-      alignItems:
-        'center',
-
-      justifyContent:
-        'space-between',
-    },
-
-    headerButton: {
-      width: 44,
-      height: 44,
-
-      justifyContent:
-        'center',
-
-      alignItems:
-        'center',
-    },
-
-    title: {
-      fontFamily:
-        'DancingScript_700Bold',
-
-      fontSize:
-        small ? 29 : 34,
-
-      color:
-        '#14646B',
-    },
-
-    editButton: {
-      minWidth: 70,
-      height: 38,
-
-      paddingHorizontal: 12,
-
-      borderRadius: 19,
-
-      backgroundColor:
-        '#E7F4F4',
-
-      flexDirection:
-        'row',
-
-      alignItems:
-        'center',
-
-      justifyContent:
-        'center',
-    },
-
-    editButtonText: {
-      color:
-        '#14646B',
-
-      fontWeight:
-        '700',
-
-      fontSize: 13,
-
-      marginLeft: 5,
-    },
-
-    content: {
-      paddingHorizontal: 20,
-      paddingBottom: 60,
-    },
-
-    // PROFILE TOP
-
-    profileHeader: {
-      alignItems:
-        'center',
-
-      marginTop: 10,
-
-      marginBottom: 28,
-    },
-
-    imageContainer: {
-      position:
-        'relative',
-    },
-
-    petImage: {
-      width: 120,
-      height: 120,
-
-      borderRadius: 32,
-
-      borderWidth: 4,
-
-      borderColor:
-        '#FFFFFF',
-    },
-
-    pawBadge: {
-      position:
-        'absolute',
-
-      right: -5,
-      bottom: -5,
-
-      width: 38,
-      height: 38,
-
-      borderRadius: 19,
-
-      backgroundColor:
-        '#14646B',
-
-      justifyContent:
-        'center',
-
-      alignItems:
-        'center',
-
-      borderWidth: 3,
-
-      borderColor:
-        '#FFFDF8',
-    },
-
-    petName: {
-      marginTop: 14,
-
-      fontSize: 25,
-
-      fontWeight:
-        '800',
-
-      color:
-        '#173F43',
-    },
-
-    petSubtitle: {
-      marginTop: 3,
-
-      fontSize: 14,
-
-      color:
-        '#718587',
-    },
-
-    // SECTIONS
-
-    sectionTitle: {
-      fontSize: 17,
-
-      fontWeight:
-        '800',
-
-      color:
-        '#173F43',
-
-      marginTop: 8,
-
-      marginBottom: 12,
-    },
-
-    // VIEW MODE
-
-    infoCard: {
-      backgroundColor:
-        '#FFFFFF',
-
-      borderRadius: 20,
-
-      paddingHorizontal: 16,
-
-      paddingVertical: 5,
-
-      marginBottom: 24,
-
-      borderWidth: 1,
-
-      borderColor:
-        '#E3ECEC',
-
-      shadowColor:
-        '#000',
-
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-
-      shadowOpacity: 0.05,
-
-      shadowRadius: 8,
-
-      elevation: 2,
-    },
-
-    profileRow: {
-      minHeight: 66,
-
-      flexDirection:
-        'row',
-
-      alignItems:
-        'center',
-    },
-
-    profileRowVertical: {
-      minHeight: 78,
-      alignItems:
-        'flex-start',
-
-      paddingVertical: 14,
-    },
-
-    profileIcon: {
-      width: 38,
-      height: 38,
-
-      borderRadius: 12,
-
-      backgroundColor:
-        '#E7F4F4',
-
-      alignItems:
-        'center',
-
-      justifyContent:
-        'center',
-
-      marginRight: 12,
-    },
-
-    profileTextContainer: {
-      flex: 1,
-    },
-
-    profileLabel: {
-      fontSize: 11,
-
-      color:
-        '#839294',
-
-      marginBottom: 3,
-    },
-
-    profileValue: {
-      fontSize: 14,
-
-      lineHeight: 20,
-
-      fontWeight:
-        '600',
-
-      color:
-        '#344F52',
-
-      textTransform:
-        'none',
-    },
-
-    divider: {
-      height: 1,
-
-      backgroundColor:
-        '#EDF1F1',
-
-      marginLeft: 50,
-    },
-
-    // FORM
-
-    inputGroup: {
-      marginBottom: 16,
-    },
-
-    inputLabel: {
-      fontSize: 12,
-
-      fontWeight:
-        '700',
-
-      color:
-        '#53686A',
-
-      marginBottom: 7,
-    },
-
-    inputContainer: {
-      minHeight: 52,
-
-      borderRadius: 14,
-
-      borderWidth: 1,
-
-      borderColor:
-        '#DCE6E6',
-
-      backgroundColor:
-        '#FFFFFF',
-
-      paddingHorizontal: 14,
-
-      flexDirection:
-        'row',
-
-      alignItems:
-        'center',
-    },
-
-    input: {
-      flex: 1,
-
-      fontSize: 14,
-
-      color:
-        '#193E42',
-
-      marginLeft: 10,
-
-      paddingVertical: 12,
-    },
-
-    multilineContainer: {
-      minHeight: 100,
-
-      alignItems:
-        'flex-start',
-    },
-
-    multilineInput: {
-      minHeight: 90,
-
-      textAlignVertical:
-        'top',
-
-      paddingTop: 14,
-    },
-
-    multilineIcon: {
-      marginTop: 15,
-    },
-
-    inputSuffix: {
-      color:
-        '#718587',
-
-      fontSize: 13,
-
-      fontWeight:
-        '600',
-    },
-
-    // SEX BUTTONS
-
-    genderRow: {
-      flexDirection:
-        'row',
-
-      marginBottom: 18,
-
-      gap: 8,
-    },
-
-    genderButton: {
-      flex: 1,
-
-      minHeight: 44,
-
-      borderRadius: 12,
-
-      borderWidth: 1,
-
-      borderColor:
-        '#CDE0E0',
-
-      flexDirection:
-        'row',
-
-      alignItems:
-        'center',
-
-      justifyContent:
-        'center',
-
-      backgroundColor:
-        '#FFFFFF',
-    },
-
-    genderButtonActive: {
-      backgroundColor:
-        '#14646B',
-
-      borderColor:
-        '#14646B',
-    },
-
-    genderButtonText: {
-      marginLeft: 5,
-
-      color:
-        '#14646B',
-
-      fontWeight:
-        '700',
-
-      fontSize:
-        small ? 11 : 12,
-    },
-
-    genderButtonTextActive: {
-      color:
-        '#FFFFFF',
-    },
-
-    // BUTTONS
-
-    saveButton: {
-      height: 52,
-
-      borderRadius: 14,
-
-      backgroundColor:
-        '#14646B',
-
-      flexDirection:
-        'row',
-
-      alignItems:
-        'center',
-
-      justifyContent:
-        'center',
-
-      marginTop: 12,
-    },
-
-    saveButtonText: {
-      marginLeft: 7,
-
-      color:
-        '#FFFFFF',
-
-      fontSize: 14,
-
-      fontWeight:
-        '800',
-    },
-
-    cancelButton: {
-      height: 48,
-
-      alignItems:
-        'center',
-
-      justifyContent:
-        'center',
-
-      marginTop: 8,
-    },
-
-    cancelButtonText: {
-      color:
-        '#758789',
-
-      fontSize: 13,
-
-      fontWeight:
-        '700',
-    },
-  });
+import { Dimensions, StyleSheet } from 'react-native';
+import { colors } from '../../lib/theme';
+
+const { width } = Dimensions.get('window');
+const small = width < 360;
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { height: 64, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  headerButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  title: { fontSize: small ? 21 : 23, fontWeight: '900', color: colors.text },
+  editButton: { minWidth: 68, height: 38, paddingHorizontal: 12, borderRadius: 19, backgroundColor: colors.primarySoft, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  editButtonText: { marginLeft: 5, color: colors.primary, fontWeight: '800', fontSize: 12 },
+  content: { paddingHorizontal: small ? 16 : 20, paddingBottom: 50 },
+  centerState: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  stateText: { marginTop: 10, color: colors.textSecondary, fontSize: 13 },
+  noticeCard: { flexDirection: 'row', alignItems: 'center', padding: 12, borderRadius: 14, backgroundColor: colors.warningSoft, marginBottom: 14 },
+  noticeText: { flex: 1, marginLeft: 8, color: colors.warning, fontSize: 12, lineHeight: 17 },
+  heroCard: { backgroundColor: colors.surface, borderRadius: 22, padding: 14, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.border, marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  petImage: { width: small ? 88 : 96, height: small ? 88 : 96, borderRadius: 22 },
+  heroText: { flex: 1 },
+  petName: { fontSize: small ? 23 : 26, fontWeight: '800', color: colors.text },
+  petSubtitle: { fontSize: 12, color: colors.textSecondary, marginTop: 4, lineHeight: 17 },
+  miniBadge: { alignSelf: 'flex-start', marginTop: 10, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.primarySoft, paddingHorizontal: 9, paddingVertical: 5, borderRadius: 14 },
+  miniBadgeText: { marginLeft: 5, fontSize: 10, fontWeight: '800', color: colors.primary },
+  sectionHeader: { marginBottom: 10, marginTop: 2 },
+  sectionTitle: { fontSize: 18, fontWeight: '800', color: colors.text },
+  sectionSubtitle: { marginTop: 3, fontSize: 12, color: colors.textSecondary, lineHeight: 17 },
+  infoCard: { backgroundColor: colors.surface, borderRadius: 20, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 15, marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 6, elevation: 1 },
+  infoRow: { minHeight: 64, flexDirection: 'row', alignItems: 'center', paddingVertical: 9 },
+  infoRowVertical: { alignItems: 'flex-start', minHeight: 78, paddingVertical: 14 },
+  infoRowBorder: { borderBottomWidth: 1, borderBottomColor: '#EDF2F1' },
+  infoIcon: { width: 38, height: 38, borderRadius: 12, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  infoText: { flex: 1 },
+  infoLabel: { fontSize: 10, color: colors.textMuted, marginBottom: 3 },
+  infoValue: { fontSize: 14, lineHeight: 20, fontWeight: '600', color: '#355255' },
+  formCard: { backgroundColor: colors.surface, borderRadius: 20, borderWidth: 1, borderColor: colors.border, padding: 15, marginBottom: 22 },
+  inputGroup: { marginBottom: 15 },
+  inputLabel: { fontSize: 11, fontWeight: '800', color: '#53686A', marginBottom: 7 },
+  inputContainer: { minHeight: 50, borderRadius: 14, borderWidth: 1, borderColor: '#D7E3E2', backgroundColor: '#FCFEFD', paddingHorizontal: 13, flexDirection: 'row', alignItems: 'center' },
+  input: { flex: 1, marginLeft: 9, fontSize: 14, color: colors.text, paddingVertical: 11 },
+  inputSuffix: { color: colors.textSecondary, fontSize: 12, fontWeight: '700' },
+  multilineContainer: { minHeight: 94, alignItems: 'flex-start' },
+  multilineIcon: { marginTop: 14 },
+  multilineInput: { minHeight: 84, textAlignVertical: 'top', paddingTop: 13 },
+  segmentRow: { flexDirection: 'row', gap: 8, marginBottom: 15 },
+  segment: { flex: 1, minHeight: 42, borderRadius: 12, borderWidth: 1, borderColor: '#CDE0E0', backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  segmentActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  segmentText: { marginLeft: 5, color: colors.primary, fontWeight: '800', fontSize: small ? 10 : 11 },
+  segmentTextActive: { color: '#FFF' },
+  saveButton: { height: 52, borderRadius: 15, backgroundColor: colors.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  saveButtonText: { marginLeft: 7, color: '#FFF', fontSize: 14, fontWeight: '800' },
+  disabledButton: { opacity: 0.65 },
+  cancelButton: { height: 46, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  cancelButtonText: { color: colors.textSecondary, fontSize: 13, fontWeight: '700' },
+
+  petImageWrap: { position: 'relative', marginRight: 14 },
+  photoButton: { position: 'absolute', right: -5, bottom: -5, width: 34, height: 34, borderRadius: 17, backgroundColor: colors.primary, borderWidth: 3, borderColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+});
 
 export default styles;

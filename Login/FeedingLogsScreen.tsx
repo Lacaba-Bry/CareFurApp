@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
-
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -15,1421 +9,349 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 
-import {
-  Ionicons,
-} from '@expo/vector-icons';
-
-import {
-  supabase,
-} from '../lib/supabase';
-
+import { supabase } from '../lib/supabase';
+import { colors } from '../lib/theme';
 import styles from '../assets/css/FeedingStyles';
-
-// ============================================================
-// TYPES
-// ============================================================
 
 type Pet = {
   id: string;
-
   name?: string | null;
-
   species?: string | null;
-
   breed?: string | null;
-
-  sex?: string | null;
-
   photo_url?: string | null;
-
-  feeding_notes?: string | null;
 };
 
 type Booking = {
   id: string;
-
-  booking_code?: string | null;
-
-  pet_id?: string | null;
-
-  room_id?: string | null;
-
   status?: string | null;
-
-  check_in_at?: string | null;
-
-  expected_check_out_at?: string | null;
-
-  special_instructions?: string | null;
 };
 
 type FeedingSchedule = {
   id: string;
-
   booking_id: string;
-
   scheduled_at: string;
-
   feeding_method?: string | null;
-
   compartment_number?: number | null;
-
   portion_grams?: number | null;
-
   instructions?: string | null;
-
   status?: string | null;
 };
 
-type FilterType =
-  | 'all'
-  | 'completed'
-  | 'scheduled';
+type FeedingLog = {
+  id: string;
+  booking_id: string;
+  schedule_id?: string | null;
+  feeder_device_id?: string | null;
+  feeding_method?: string | null;
+  compartment_number?: number | null;
+  served_weight_grams?: number | null;
+  remaining_weight_grams?: number | null;
+  result?: 'success' | 'partial' | 'failed' | 'skipped' | string | null;
+  completed_at?: string | null;
+  notes?: string | null;
+  created_at?: string | null;
+};
 
-// ============================================================
-// FEEDING LOGS SCREEN
-// ============================================================
+type FilterType = 'all' | 'completed' | 'upcoming';
 
-export default function FeedingLogsScreen({
-  navigation,
-  route,
-}: any) {
-  const routeParams =
-    route?.params ?? {};
+export default function FeedingLogsScreen({ route }: any) {
+  const params = route?.params ?? {};
+  const accessCode = params.accessCode ?? '';
 
-  // ==========================================================
-  // DATA PASSED FROM CODESCREEN / BOTTOMNAV
-  // ==========================================================
+  const [booking, setBooking] = useState<Booking | null>(params.booking ?? null);
+  const [pet, setPet] = useState<Pet | null>(params.pet ?? null);
+  const [schedules, setSchedules] = useState<FeedingSchedule[]>(params.feedingSchedules ?? []);
+  const [logs, setLogs] = useState<FeedingLog[]>([]);
+  const [filter, setFilter] = useState<FilterType>('all');
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [logNotice, setLogNotice] = useState<string | null>(null);
 
-  const [
-    booking,
-    setBooking,
-  ] =
-    useState<Booking | null>(
-      routeParams.booking ??
-        null
-    );
+  const loadData = useCallback(async () => {
+    try {
+      setError(null);
+      setLogNotice(null);
+      let currentBooking = booking;
 
-  const [
-    pet,
-    setPet,
-  ] =
-    useState<Pet | null>(
-      routeParams.pet ??
-        null
-    );
-
-  const [
-    feedingSchedules,
-    setFeedingSchedules,
-  ] =
-    useState<
-      FeedingSchedule[]
-    >(
-      routeParams
-        .feedingSchedules ??
-        []
-    );
-
-  const [
-    filter,
-    setFilter,
-  ] =
-    useState<FilterType>(
-      'all'
-    );
-
-  const [
-    loading,
-    setLoading,
-  ] =
-    useState(false);
-
-  const [
-    refreshing,
-    setRefreshing,
-  ] =
-    useState(false);
-
-  const [
-    error,
-    setError,
-  ] =
-    useState<
-      string | null
-    >(null);
-
-  const accessCode =
-    routeParams
-      .accessCode ??
-    '';
-
-  // ==========================================================
-  // FETCH FRESH BOARDING DATA
-  // ==========================================================
-
-  const loadFeedingData =
-    useCallback(
-      async () => {
-        if (
-          !accessCode
-        ) {
-          return;
+      if (accessCode) {
+        const { data, error: verifyError } = await supabase.functions.invoke('verify-booking-code', {
+          body: { code: accessCode },
+        });
+        if (verifyError) throw new Error(verifyError.message || 'Unable to load feeding information.');
+        if (data?.error) throw new Error(data.error);
+        if (data?.booking) {
+          currentBooking = data.booking;
+          setBooking(data.booking);
         }
+        if (data?.pet) setPet(data.pet);
+        setSchedules(data?.feedingSchedules ?? []);
+      }
 
-        try {
-          setError(null);
+      if (!currentBooking?.id) throw new Error('No active booking was found.');
 
-          const {
-            data,
-            error:
-              functionError,
-          } =
-            await supabase
-              .functions
-              .invoke(
-                'verify-booking-code',
-                {
-                  body: {
-                    code:
-                      accessCode,
-                  },
-                }
-              );
+      const { data: logData, error: logError } = await supabase
+        .from('feeding_logs')
+        .select('id,booking_id,schedule_id,feeder_device_id,feeding_method,compartment_number,served_weight_grams,remaining_weight_grams,result,completed_at,notes,created_at')
+        .eq('booking_id', currentBooking.id)
+        .order('completed_at', { ascending: false });
 
-          if (
-            functionError
-          ) {
-            console.error(
-              'Feeding verify function error:',
-              functionError
-            );
-
-            throw new Error(
-              functionError
-                .message ||
-                'Unable to load feeding information.'
-            );
-          }
-
-          if (
-            !data
-          ) {
-            throw new Error(
-              'No response was received from Supabase.'
-            );
-          }
-
-          if (
-            data.error
-          ) {
-            throw new Error(
-              data.error
-            );
-          }
-
-          if (
-            data.booking
-          ) {
-            setBooking(
-              data.booking
-            );
-          }
-
-          if (
-            data.pet
-          ) {
-            setPet(
-              data.pet
-            );
-          }
-
-          setFeedingSchedules(
-            data
-              .feedingSchedules ??
-              []
-          );
-
-          console.log(
-            'FEEDING DATA LOADED'
-          );
-
-          console.log(
-            'Pet:',
-            data.pet
-          );
-
-          console.log(
-            'Feeding schedules:',
-            data
-              .feedingSchedules
-          );
-        } catch (
-          err: any
-        ) {
-          console.error(
-            'FeedingLogs load error:',
-            err
-          );
-
-          setError(
-            err?.message ||
-              'Unable to load feeding logs.'
-          );
-        } finally {
-          setLoading(
-            false
-          );
-
-          setRefreshing(
-            false
-          );
-        }
-      },
-      [
-        accessCode,
-      ]
-    );
-
-  // ==========================================================
-  // INITIAL LOAD
-  // ==========================================================
-
-  useEffect(() => {
-    /*
-     * If CodeScreen already passed data,
-     * show it immediately.
-     *
-     * Then refresh from the Edge Function.
-     */
-
-    if (
-      feedingSchedules
-        .length === 0
-    ) {
-      setLoading(
-        true
-      );
+      if (logError) {
+        console.warn('Feeding logs query warning:', logError);
+        setLogs([]);
+        setLogNotice('Schedules loaded, but verification records are not available with the current database permissions.');
+      } else {
+        setLogs(logData ?? []);
+      }
+    } catch (err: any) {
+      console.error('Feeding load error:', err);
+      setError(err?.message || 'Unable to load feeding information.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
+  }, [accessCode, booking?.id]);
 
-    loadFeedingData();
-  }, []);
+  useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
 
-  // ==========================================================
-  // REFRESH
-  // ==========================================================
+  const logBySchedule = useMemo(() => {
+    const map = new Map<string, FeedingLog>();
+    logs.forEach((log) => { if (log.schedule_id) map.set(log.schedule_id, log); });
+    return map;
+  }, [logs]);
 
-  const handleRefresh =
-    () => {
-      setRefreshing(
-        true
-      );
+  const entries = useMemo(() => {
+    const sorted = [...schedules].sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime());
+    const filtered = sorted.filter((schedule) => {
+      const hasLog = logBySchedule.has(schedule.id);
+      if (filter === 'completed') return schedule.status === 'completed' || hasLog;
+      if (filter === 'upcoming') return schedule.status === 'pending' && !hasLog;
+      return true;
+    });
 
-      loadFeedingData();
-    };
+    const grouped: { key: string; label: string; items: FeedingSchedule[] }[] = [];
+    for (const schedule of filtered) {
+      const date = new Date(schedule.scheduled_at);
+      const key = dateKey(date);
+      let group = grouped.find((g) => g.key === key);
+      if (!group) {
+        group = { key, label: formatDayHeading(date), items: [] };
+        grouped.push(group);
+      }
+      group.items.push(schedule);
+    }
+    return grouped;
+  }, [schedules, filter, logBySchedule]);
 
-  // ==========================================================
-  // PET VALUES
-  // ==========================================================
-
-  const petName =
-    pet?.name ||
-    'Your Pet';
-
-  const species =
-    capitalize(
-      pet?.species ||
-        'Pet'
-    );
-
-  const breed =
-    pet?.breed ||
-    'Unknown Breed';
-
-  const sex =
-    capitalize(
-      pet?.sex ||
-        'Unknown'
-    );
-
-  // ==========================================================
-  // TODAY
-  // ==========================================================
-
-  const todayKey =
-    getLocalDateKey(
-      new Date()
-    );
-
-  const todaySchedules =
-    useMemo(
-      () => {
-        return feedingSchedules
-          .filter(
-            (
-              schedule
-            ) => {
-              return (
-                getLocalDateKey(
-                  new Date(
-                    schedule
-                      .scheduled_at
-                  )
-                ) ===
-                todayKey
-              );
-            }
-          )
-          .sort(
-            (
-              a,
-              b
-            ) =>
-              new Date(
-                a
-                  .scheduled_at
-              ).getTime() -
-              new Date(
-                b
-                  .scheduled_at
-              ).getTime()
-          );
-      },
-      [
-        feedingSchedules,
-        todayKey,
-      ]
-    );
-
-  // ==========================================================
-  // FILTERED SCHEDULES
-  // ==========================================================
-
-  const filteredSchedules =
-    useMemo(
-      () => {
-        if (
-          filter ===
-          'completed'
-        ) {
-          return todaySchedules.filter(
-            (
-              schedule
-            ) =>
-              normalizeStatus(
-                schedule
-                  .status
-              ) ===
-              'completed'
-          );
-        }
-
-        if (
-          filter ===
-          'scheduled'
-        ) {
-          return todaySchedules.filter(
-            (
-              schedule
-            ) => {
-              const status =
-                normalizeStatus(
-                  schedule
-                    .status
-                );
-
-              return (
-                status !==
-                  'completed' &&
-                status !==
-                  'cancelled' &&
-                status !==
-                  'canceled'
-              );
-            }
-          );
-        }
-
-        return todaySchedules;
-      },
-      [
-        todaySchedules,
-        filter,
-      ]
-    );
-
-  // ==========================================================
-  // MEAL STATUS
-  // ==========================================================
-
-  const breakfast =
-    findMeal(
-      todaySchedules,
-      'Breakfast'
-    );
-
-  const lunch =
-    findMeal(
-      todaySchedules,
-      'Lunch'
-    );
-
-  const dinner =
-    findMeal(
-      todaySchedules,
-      'Dinner'
-    );
-
-  // ==========================================================
-  // PET IMAGE
-  // ==========================================================
-
-  const petImageSource =
-    pet?.photo_url
-      ? {
-          uri:
-            pet.photo_url,
-        }
-      : require(
-          '../assets/Login/Logo.jpg'
-        );
-
-  // ==========================================================
-  // LOADING
-  // ==========================================================
-
-  if (
-    loading &&
-    feedingSchedules
-      .length === 0
-  ) {
-    return (
-      <SafeAreaView
-        style={
-          styles.container
-        }
-      >
-        <View
-          style={{
-            flex: 1,
-
-            justifyContent:
-              'center',
-
-            alignItems:
-              'center',
-          }}
-        >
-          <ActivityIndicator
-            size="large"
-            color="#14646B"
-          />
-
-          <Text
-            style={{
-              marginTop:
-                10,
-
-              color:
-                '#14646B',
-            }}
-          >
-            Loading feeding
-            logs...
-          </Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // ==========================================================
-  // SCREEN
-  // ==========================================================
+  const completedCount = schedules.filter((s) => s.status === 'completed' || logBySchedule.has(s.id)).length;
+  const upcomingCount = schedules.filter((s) => s.status === 'pending' && !logBySchedule.has(s.id)).length;
+  const verifiedCount = logs.filter((log) => Boolean(log.result)).length;
+  const petImage = pet?.photo_url ? { uri: pet.photo_url } : require('../assets/Login/DogProfile.jpg');
 
   return (
-    <SafeAreaView
-      style={
-        styles.container
-      }
-    >
+    <SafeAreaView style={styles.container}>
       <ScrollView
-        showsVerticalScrollIndicator={
-          false
-        }
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.content}
         refreshControl={
           <RefreshControl
-            refreshing={
-              refreshing
-            }
-            onRefresh={
-              handleRefresh
-            }
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              loadData();
+            }}
+            tintColor={colors.primary}
           />
         }
       >
-        {/* ================================================= */}
-        {/* HEADER */}
-        {/* ================================================= */}
-
-        <View
-          style={
-            styles.header
-          }
-        >
-          <TouchableOpacity
-            onPress={() => {
-              if (
-                navigation
-                  ?.canGoBack?.()
-              ) {
-                navigation.goBack();
-              }
-            }}
-          >
-            <Ionicons
-              name="chevron-back"
-              size={28}
-              color="#111"
-            />
-          </TouchableOpacity>
-
-          <Text
-            style={
-              styles.title
-            }
-          >
-            Feeding Logs
-          </Text>
-
-          <TouchableOpacity>
-            <Ionicons
-              name="options-outline"
-              size={24}
-              color="#111"
-            />
-          </TouchableOpacity>
-        </View>
-
-        {/* ================================================= */}
-        {/* ERROR */}
-        {/* ================================================= */}
-
-        {error ? (
-          <Text
-            style={{
-              color:
-                '#D06435',
-
-              fontSize: 12,
-
-              marginHorizontal:
-                20,
-
-              marginBottom:
-                10,
-            }}
-          >
-            {error}
-          </Text>
-        ) : null}
-
-        {/* ================================================= */}
-        {/* PET CARD */}
-        {/* ================================================= */}
-
-        <View
-          style={
-            styles.petCard
-          }
-        >
-          <View
-            style={
-              styles.petTopRow
-            }
-          >
-            <Image
-              source={
-                petImageSource
-              }
-              style={
-                styles.petImage
-              }
-            />
-
-            <View
-              style={
-                styles.petInfo
-              }
-            >
-              <Text
-                style={
-                  styles.petName
-                }
-              >
-                {petName}
-              </Text>
-
-              <View
-                style={
-                  styles.infoRow
-                }
-              >
-                <Text
-                  style={
-                    styles.info
-                  }
-                >
-                  🐾 {species}
-                </Text>
-
-                <Text
-                  style={
-                    styles.infoDot
-                  }
-                >
-                  ●
-                </Text>
-
-                <Text
-                  style={
-                    styles.info
-                  }
-                >
-                  {breed}
-                </Text>
-
-                <Text
-                  style={
-                    styles.infoDot
-                  }
-                >
-                  ●
-                </Text>
-
-                <Text
-                  style={
-                    styles.info
-                  }
-                >
-                  {sex}
-                </Text>
-              </View>
-            </View>
-
-            <Ionicons
-              name="chevron-down"
-              size={22}
-              color="#111"
-            />
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.pageTitle}>Feeding Activity</Text>
+            <Text style={styles.pageSubtitle}>Schedules, completion status, and dispensing verification.</Text>
           </View>
-
-          {/* =============================================== */}
-          {/* MEALS TODAY */}
-          {/* =============================================== */}
-
-          <View
-            style={
-              styles.mealsInsideCard
-            }
-          >
-            <Text
-              style={
-                styles.mealsTitle
-              }
-            >
-              🍽 Meals Today
-            </Text>
-
-            <View
-              style={
-                styles.mealStatus
-              }
-            >
-              <MealStatusText
-                label="Breakfast"
-                schedule={
-                  breakfast
-                }
-              />
-
-              <MealStatusText
-                label="Lunch"
-                schedule={
-                  lunch
-                }
-              />
-
-              <MealStatusText
-                label="Dinner"
-                schedule={
-                  dinner
-                }
-              />
-            </View>
+          <View style={styles.headerIcon}>
+            <Ionicons name="nutrition" size={21} color={colors.primary} />
           </View>
         </View>
 
-        {/* ================================================= */}
-        {/* DATE */}
-        {/* ================================================= */}
-
-        <View
-          style={
-            styles.dateRow
-          }
-        >
-          <Text
-            style={
-              styles.date
-            }
-          >
-            Today,{' '}
-            {formatDate(
-              new Date()
-            )}
-          </Text>
-
-          <Ionicons
-            name="calendar-outline"
-            size={20}
-            color="#111"
-          />
+        <View style={styles.petCard}>
+          <Image source={petImage} style={styles.petImage} />
+          <View style={styles.petInfo}>
+            <Text style={styles.petName}>{pet?.name || 'Your Pet'}</Text>
+            <Text style={styles.petMeta}>{[capitalize(pet?.species), pet?.breed].filter(Boolean).join(' • ') || 'Current boarding stay'}</Text>
+          </View>
+          <View style={styles.progressPill}>
+            <Text style={styles.progressValue}>{completedCount}/{schedules.length || 0}</Text>
+            <Text style={styles.progressLabel}>done</Text>
+          </View>
         </View>
 
-        {/* ================================================= */}
-        {/* FILTER */}
-        {/* ================================================= */}
-
-        <View
-          style={
-            styles.filter
-          }
-        >
-          <TouchableOpacity
-            style={
-              filter ===
-              'all'
-                ? styles.filterActive
-                : styles.filterItem
-            }
-            onPress={() =>
-              setFilter(
-                'all'
-              )
-            }
-          >
-            <Text
-              style={
-                filter ===
-                'all'
-                  ? styles.filterActiveText
-                  : styles.filterText
-              }
-            >
-              All
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={
-              filter ===
-              'completed'
-                ? styles.filterActive
-                : styles.filterItem
-            }
-            onPress={() =>
-              setFilter(
-                'completed'
-              )
-            }
-          >
-            <Text
-              style={
-                filter ===
-                'completed'
-                  ? styles.filterActiveText
-                  : styles.filterText
-              }
-            >
-              Completed
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={
-              filter ===
-              'scheduled'
-                ? styles.filterActive
-                : styles.filterItem
-            }
-            onPress={() =>
-              setFilter(
-                'scheduled'
-              )
-            }
-          >
-            <Text
-              style={
-                filter ===
-                'scheduled'
-                  ? styles.filterActiveText
-                  : styles.filterText
-              }
-            >
-              Scheduled
-            </Text>
-          </TouchableOpacity>
+        <View style={styles.summaryStrip}>
+          <Summary icon="checkmark-circle" value={completedCount} label="Completed" color={colors.success} />
+          <View style={styles.summaryDivider} />
+          <Summary icon="time" value={upcomingCount} label="Upcoming" color={colors.warning} />
+          <View style={styles.summaryDivider} />
+          <Summary icon="shield-checkmark" value={verifiedCount} label="Verified" color={colors.primary} />
         </View>
 
-        {/* ================================================= */}
-        {/* FEEDING LOGS */}
-        {/* ================================================= */}
+        {error ? <Notice type="error" text={error} /> : null}
+        {logNotice ? <Notice type="info" text={logNotice} /> : null}
 
-        {filteredSchedules
-          .length === 0 ? (
-          <View
-            style={{
-              paddingVertical:
-                30,
+        <View style={styles.filterRow}>
+          <Filter label="All" active={filter === 'all'} onPress={() => setFilter('all')} />
+          <Filter label="Completed" active={filter === 'completed'} onPress={() => setFilter('completed')} />
+          <Filter label="Upcoming" active={filter === 'upcoming'} onPress={() => setFilter('upcoming')} />
+        </View>
 
-              alignItems:
-                'center',
-            }}
-          >
-            <Ionicons
-              name="restaurant-outline"
-              size={35}
-              color="#999"
-            />
-
-            <Text
-              style={{
-                marginTop:
-                  8,
-
-                color:
-                  '#777',
-
-                fontSize:
-                  13,
-              }}
-            >
-              No feeding logs
-              found.
-            </Text>
+        {loading && schedules.length === 0 ? (
+          <View style={styles.centerState}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.stateText}>Loading feeding activity...</Text>
+          </View>
+        ) : entries.length === 0 ? (
+          <View style={styles.emptyCard}>
+            <View style={styles.emptyIcon}><Ionicons name="restaurant-outline" size={28} color={colors.primary} /></View>
+            <Text style={styles.emptyTitle}>No feeding activity</Text>
+            <Text style={styles.emptyText}>There are no feeding records in this view yet.</Text>
           </View>
         ) : (
-          filteredSchedules.map(
-            (
-              schedule
-            ) => {
-              const meal =
-                getMealPeriod(
-                  schedule
-                    .scheduled_at
-                );
-
-              const status =
-                normalizeStatus(
-                  schedule
-                    .status
-                );
-
-              const completed =
-                status ===
-                'completed';
-
-              const items =
-                buildFeedingItems(
-                  schedule
-                );
-
-              return (
-                <FoodLog
-                  key={
-                    schedule.id
-                  }
-                  color={
-                    getMealColor(
-                      meal
-                    )
-                  }
-                  time={`${formatTime(
-                    schedule
-                      .scheduled_at
-                  )} — ${meal}`}
-                  status={
-                    completed
-                      ? '✓'
-                      : '⌛'
-                  }
-                  items={
-                    items
-                  }
-                  compact={
-                    !completed &&
-                    items
-                      .length ===
-                      0
-                  }
-                />
-              );
-            }
-          )
+          entries.map((group) => (
+            <View key={group.key} style={styles.daySection}>
+              <View style={styles.dayHeadingRow}>
+                <Text style={styles.dayHeading}>{group.label}</Text>
+                <Text style={styles.dayCount}>{group.items.length} meal{group.items.length === 1 ? '' : 's'}</Text>
+              </View>
+              {group.items.map((schedule) => (
+                <FeedingCard key={schedule.id} schedule={schedule} log={logBySchedule.get(schedule.id)} />
+              ))}
+            </View>
+          ))
         )}
-
-        <View
-          style={{
-            height:
-              20,
-          }}
-        />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-// ============================================================
-// MEAL STATUS
-// ============================================================
-
-function MealStatusText({
-  label,
-  schedule,
-}: {
-  label: string;
-
-  schedule:
-    | FeedingSchedule
-    | null;
-}) {
-  if (
-    !schedule
-  ) {
-    return (
-      <Text>
-        — {label}
-      </Text>
-    );
-  }
-
-  const status =
-    normalizeStatus(
-      schedule.status
-    );
-
-  if (
-    status ===
-    'completed'
-  ) {
-    return (
-      <Text
-        style={
-          styles.completed
-        }
-      >
-        ✓ {label}
-      </Text>
-    );
-  }
+function FeedingCard({ schedule, log }: { schedule: FeedingSchedule; log?: FeedingLog }) {
+  const complete = schedule.status === 'completed' || Boolean(log);
+  const result = log?.result ?? (complete ? 'completed' : schedule.status ?? 'pending');
+  const tone = getResultTone(result);
+  const scheduled = new Date(schedule.scheduled_at);
+  const served = log?.served_weight_grams;
+  const remaining = log?.remaining_weight_grams;
+  const method = capitalize(log?.feeding_method || schedule.feeding_method || 'automatic');
 
   return (
-    <Text
-      style={
-        styles.pending
-      }
-    >
-      ⌛ {label}
-    </Text>
-  );
-}
-
-// ============================================================
-// FOOD LOG
-// ============================================================
-
-function FoodLog({
-  color,
-  time,
-  status,
-  items,
-  compact = false,
-}: {
-  color: string;
-
-  time: string;
-
-  status: string;
-
-  items?: string[];
-
-  compact?: boolean;
-}) {
-  return (
-    <View
-      style={[
-        styles.log,
-
-        {
-          backgroundColor:
-            color,
-        },
-      ]}
-    >
-      <View
-        style={
-          styles.logHeader
-        }
-      >
-        <Text
-          style={
-            styles.time
-          }
-        >
-          {time}
-        </Text>
-
-        <Text
-          style={
-            styles.status
-          }
-        >
-          {status}
-        </Text>
+    <View style={styles.logCard}>
+      <View style={styles.timelineRail}>
+        <View style={[styles.timelineDot, { backgroundColor: tone.color }]} />
+        <View style={styles.timelineLine} />
       </View>
 
-      {!compact && (
-        <>
-          {items?.map(
-            (
-              item,
-              index
-            ) => (
-              <View
-                key={
-                  `${item}-${index}`
-                }
-                style={
-                  styles.itemRow
-                }
-              >
-                <View
-                  style={
-                    styles.bullet
-                  }
-                />
+      <View style={styles.logContent}>
+        <View style={styles.logTop}>
+          <View>
+            <Text style={styles.time}>{formatTime(scheduled)}</Text>
+            <Text style={styles.methodLine}>{method}{schedule.compartment_number ? ` • Chamber ${schedule.compartment_number}` : ''}</Text>
+          </View>
+          <View style={[styles.resultBadge, { backgroundColor: tone.bg }]}>
+            <View style={[styles.resultDot, { backgroundColor: tone.color }]} />
+            <Text style={[styles.resultText, { color: tone.color }]}>{capitalize(result)}</Text>
+          </View>
+        </View>
 
-                <Text
-                  style={
-                    styles.item
-                  }
-                >
-                  {item}
-                </Text>
-              </View>
-            )
-          )}
+        <View style={styles.mealFacts}>
+          <Fact icon="scale-outline" label="Scheduled" value={schedule.portion_grams != null ? `${schedule.portion_grams} g` : 'Not set'} />
+          <Fact icon="checkmark-done-outline" label="Served" value={served != null ? `${served} g` : '—'} />
+          <Fact icon="analytics-outline" label="Remaining" value={remaining != null ? `${remaining} g` : '—'} />
+        </View>
 
-          {/*
-            Keep your button design.
+        {log ? (
+          <View style={styles.verificationBar}>
+            <Ionicons name="shield-checkmark-outline" size={17} color={tone.color} />
+            <View style={styles.verificationTextWrap}>
+              <Text style={styles.verificationTitle}>Dispensing verification</Text>
+              <Text style={styles.verificationBody}>
+                {result === 'success' ? 'Feeding was verified successfully.' : `Verification result: ${capitalize(result)}.`}
+                {log.completed_at ? ` ${formatCompletion(log.completed_at)}` : ''}
+              </Text>
+            </View>
+          </View>
+        ) : (
+          <View style={styles.pendingBar}>
+            <Ionicons name="time-outline" size={16} color={colors.warning} />
+            <Text style={styles.pendingText}>Waiting for the scheduled feeding or verification result.</Text>
+          </View>
+        )}
 
-            Your current feeding_schedules schema
-            doesn't include a feeding photo URL yet,
-            so the button is visual only for now.
-          */}
-
-          <TouchableOpacity
-            style={
-              styles.photoBtn
-            }
-          >
-            <Text
-              style={
-                styles.photoText
-              }
-            >
-              View Feeding
-              Details →
-            </Text>
-          </TouchableOpacity>
-        </>
-      )}
+        {schedule.instructions || log?.notes ? (
+          <View style={styles.notesRow}>
+            <Ionicons name="document-text-outline" size={15} color={colors.textSecondary} />
+            <Text style={styles.notesText}>{log?.notes || schedule.instructions}</Text>
+          </View>
+        ) : null}
+      </View>
     </View>
   );
 }
 
-// ============================================================
-// BUILD FEEDING DETAILS
-// ============================================================
-
-function buildFeedingItems(
-  schedule:
-    FeedingSchedule
-) {
-  const items:
-    string[] = [];
-
-  if (
-    schedule
-      .feeding_method
-  ) {
-    items.push(
-      `Method: ${capitalize(
-        schedule
-          .feeding_method
-      )}`
-    );
-  }
-
-  if (
-    schedule
-      .instructions
-  ) {
-    items.push(
-      `Instructions: ${schedule.instructions}`
-    );
-  }
-
-  if (
-    schedule
-      .portion_grams
-  ) {
-    items.push(
-      `Portion: ${schedule.portion_grams} g`
-    );
-  }
-
-  if (
-    schedule
-      .compartment_number
-  ) {
-    items.push(
-      `Feeder Chamber: ${schedule.compartment_number}`
-    );
-  }
-
-  const status =
-    normalizeStatus(
-      schedule.status
-    );
-
-  items.push(
-    `Status: ${capitalize(
-      status
-    )}`
-  );
-
-  return items;
-}
-
-// ============================================================
-// FIND BREAKFAST / LUNCH / DINNER
-// ============================================================
-
-function findMeal(
-  schedules:
-    FeedingSchedule[],
-
-  mealName:
-    string
-) {
+function Fact({ icon, label, value }: any) {
   return (
-    schedules.find(
-      (
-        schedule
-      ) =>
-        getMealPeriod(
-          schedule
-            .scheduled_at
-        ) === mealName
-    ) ?? null
+    <View style={styles.factItem}>
+      <Ionicons name={icon} size={15} color={colors.primary} />
+      <Text style={styles.factLabel}>{label}</Text>
+      <Text style={styles.factValue}>{value}</Text>
+    </View>
   );
 }
 
-// ============================================================
-// MEAL COLORS
-// ============================================================
-
-function getMealColor(
-  meal:
-    string
-) {
-  if (
-    meal ===
-    'Breakfast'
-  ) {
-    return '#55B8C5';
-  }
-
-  if (
-    meal ===
-    'Lunch'
-  ) {
-    return '#F49B7D';
-  }
-
-  return '#C9B47C';
-}
-
-// ============================================================
-// MEAL PERIOD
-// ============================================================
-
-function getMealPeriod(
-  value:
-    string
-) {
-  const date =
-    new Date(
-      value
-    );
-
-  const hour =
-    date.getHours();
-
-  if (
-    hour < 11
-  ) {
-    return 'Breakfast';
-  }
-
-  if (
-    hour < 16
-  ) {
-    return 'Lunch';
-  }
-
-  return 'Dinner';
-}
-
-// ============================================================
-// FORMAT TIME
-// ============================================================
-
-function formatTime(
-  value:
-    string
-) {
-  const date =
-    new Date(
-      value
-    );
-
-  if (
-    Number.isNaN(
-      date.getTime()
-    )
-  ) {
-    return '--:--';
-  }
-
-  return date
-    .toLocaleTimeString(
-      [],
-      {
-        hour:
-          '2-digit',
-
-        minute:
-          '2-digit',
-
-        hour12:
-          true,
-      }
-    );
-}
-
-// ============================================================
-// FORMAT DATE
-// ============================================================
-
-function formatDate(
-  date:
-    Date
-) {
-  return date
-    .toLocaleDateString(
-      'en-US',
-      {
-        month:
-          'long',
-
-        day:
-          'numeric',
-
-        year:
-          'numeric',
-      }
-    );
-}
-
-// ============================================================
-// LOCAL DATE KEY
-// ============================================================
-
-function getLocalDateKey(
-  date:
-    Date
-) {
-  const year =
-    date.getFullYear();
-
-  const month =
-    String(
-      date.getMonth() +
-        1
-    ).padStart(
-      2,
-      '0'
-    );
-
-  const day =
-    String(
-      date.getDate()
-    ).padStart(
-      2,
-      '0'
-    );
-
-  return `${year}-${month}-${day}`;
-}
-
-// ============================================================
-// STATUS
-// ============================================================
-
-function normalizeStatus(
-  value:
-    string |
-    null |
-    undefined
-) {
-  return String(
-    value || 'pending'
-  )
-    .trim()
-    .toLowerCase();
-}
-
-// ============================================================
-// CAPITALIZE
-// ============================================================
-
-function capitalize(
-  value:
-    string
-) {
-  if (
-    !value
-  ) {
-    return '';
-  }
-
+function Summary({ icon, value, label, color }: any) {
   return (
-    value
-      .charAt(0)
-      .toUpperCase() +
-    value.slice(1)
+    <View style={styles.summaryItem}>
+      <Ionicons name={icon} size={18} color={color} />
+      <Text style={styles.summaryValue}>{value}</Text>
+      <Text style={styles.summaryLabel}>{label}</Text>
+    </View>
   );
 }
+
+function Filter({ label, active, onPress }: any) {
+  return (
+    <TouchableOpacity style={[styles.filterButton, active && styles.filterButtonActive]} onPress={onPress}>
+      <Text style={[styles.filterText, active && styles.filterTextActive]}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+function Notice({ type, text }: { type: 'error' | 'info'; text: string }) {
+  return (
+    <View style={[styles.notice, type === 'error' ? styles.noticeError : styles.noticeInfo]}>
+      <Ionicons name={type === 'error' ? 'alert-circle-outline' : 'information-circle-outline'} size={18} color={type === 'error' ? colors.danger : colors.primary} />
+      <Text style={[styles.noticeText, { color: type === 'error' ? colors.danger : colors.primary }]}>{text}</Text>
+    </View>
+  );
+}
+
+function getResultTone(result: string) {
+  const r = result.toLowerCase();
+  if (r === 'success' || r === 'completed') return { color: colors.success, bg: colors.successSoft };
+  if (r === 'failed') return { color: colors.danger, bg: colors.dangerSoft };
+  if (r === 'partial' || r === 'pending') return { color: colors.warning, bg: colors.warningSoft };
+  return { color: colors.textSecondary, bg: '#EFF3F2' };
+}
+
+function formatTime(date: Date) { return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }); }
+function formatCompletion(value: string) { const d = new Date(value); return Number.isNaN(d.getTime()) ? '' : `Completed ${formatTime(d)}.`; }
+function dateKey(date: Date) { return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`; }
+function formatDayHeading(date: Date) {
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+  if (dateKey(date) === dateKey(today)) return 'Today';
+  if (dateKey(date) === dateKey(yesterday)) return 'Yesterday';
+  return date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+}
+function capitalize(value?: string | null) { if (!value) return ''; return value.charAt(0).toUpperCase() + value.slice(1).replaceAll('_', ' '); }

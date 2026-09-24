@@ -704,20 +704,8 @@ export default function HomeScreen({
               styles.header
             }
           >
-            <Text
-              style={
-                styles.hello
-              }
-            >
-              Hello,
-            </Text>
-
-            <Text
-              style={
-                styles.name
-              }
-            >
-              {ownerName}!
+            <Text style={styles.greeting}>
+              Hello, <Text style={styles.greetingName}>{ownerName}!</Text>
             </Text>
 
             <Text

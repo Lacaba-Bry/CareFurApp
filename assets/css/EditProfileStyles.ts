@@ -1,274 +1,51 @@
-import {
-  StyleSheet,
-  Dimensions,
-} from 'react-native';
+import { Dimensions, StyleSheet } from 'react-native';
+import { colors } from '../../lib/theme';
 
 const { width } = Dimensions.get('window');
-
-const isSmallPhone = width < 360;
-
-const horizontalPadding = isSmallPhone ? 16 : 22;
+const small = width < 360;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFDF8',
-    paddingHorizontal: horizontalPadding,
-  },
-
-  /* HEADER */
-
-  header: {
-    height: 58,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-
-  backButton: {
-    width: 38,
-    height: 38,
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-  },
-
-  headerTitle: {
-    fontSize: isSmallPhone ? 19 : 21,
-    fontWeight: '700',
-    color: '#16444A',
-  },
-
-  headerSpacer: {
-    width: 38,
-  },
-
-  /* PROFILE PHOTO */
-
-  photoSection: {
-    alignItems: 'center',
-    marginTop: 2,
-    marginBottom: 14,
-  },
-
-  imageWrapper: {
-    position: 'relative',
-  },
-
-  profileImage: {
-    width: isSmallPhone ? 82 : 92,
-    height: isSmallPhone ? 82 : 92,
-    borderRadius: 50,
-    borderWidth: 3,
-    borderColor: '#FFFFFF',
-  },
-
-  cameraButton: {
-    position: 'absolute',
-    right: -2,
-    bottom: 2,
-
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-
-    backgroundColor: '#14646B',
-
-    borderWidth: 2,
-    borderColor: '#FFFDF8',
-
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  changeText: {
-    marginTop: 6,
-
-    fontSize: 12,
-    fontWeight: '600',
-
-    color: '#14646B',
-  },
-
-  /* FORM */
-
-  form: {
-    width: '90%',
-
-    backgroundColor: '#D6C292',
-
-    borderRadius: 24,
-
-    paddingHorizontal: isSmallPhone ? 15 : 18,
-    paddingTop: 20,
-    paddingBottom: 8,
-    marginLeft: 20,
-  },
-
-  inputRow: {
-    minHeight: 48,
-
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-
-  label: {
-    width: isSmallPhone ? 82 : 100,
-
-    fontSize: isSmallPhone ? 12 : 13,
-    fontWeight: '600',
-
-    color: '#3D4545',
-  },
-
-  input: {
-    flex: 1,
-
-    height: 34,
-
-    paddingHorizontal: 12,
-    paddingVertical: 0,
-
-    backgroundColor: '#FFFDF8',
-
-    borderWidth: 1,
-    borderColor: '#8D8170',
-
-    borderRadius: 17,
-
-    fontSize: isSmallPhone ? 12 : 13,
-
-    color: '#222222',
-  },
-
-  /* SEX SELECT */
-
-  selectWrapper: {
-    flex: 1,
-    position: 'relative',
-    zIndex: 20,
-  },
-
-  select: {
-    height: 34,
-
-    paddingHorizontal: 12,
-
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-
-    backgroundColor: '#FFFDF8',
-
-    borderWidth: 1,
-    borderColor: '#8D8170',
-
-    borderRadius: 17,
-  },
-
-  selectText: {
-    fontSize: isSmallPhone ? 12 : 13,
-    color: '#222222',
-  },
-
-  dropdown: {
-    position: 'absolute',
-
-    top: 38,
-    left: 0,
-    right: 0,
-
-    backgroundColor: '#FFFDF8',
-
-    borderWidth: 1,
-    borderColor: '#C4B38B',
-
-    borderRadius: 12,
-
-    overflow: 'hidden',
-
-    zIndex: 50,
-
-    elevation: 5,
-
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
-  },
-
-  dropdownItem: {
-    height: 38,
-
-    justifyContent: 'center',
-
-    paddingHorizontal: 13,
-  },
-
-  dropdownText: {
-    fontSize: 13,
-    color: '#16444A',
-  },
-
-  dropdownDivider: {
-    height: 1,
-    backgroundColor: '#E8E2D6',
-  },
-
-  /* BUTTONS */
-
-  buttons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-
-    marginTop: 12,
-
-    gap: 10,
-  },
-
-  cancel: {
-    minWidth: 85,
-    height: 38,
-
-    paddingHorizontal: 18,
-
-    backgroundColor: '#A9ADAC',
-
-    borderRadius: 20,
-
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  apply: {
-    minWidth: 85,
-    height: 38,
-
-    paddingHorizontal: 18,
-
-    backgroundColor: '#14646B',
-
-    borderRadius: 20,
-
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  cancelText: {
-    fontSize: 12,
-    fontWeight: '700',
-
-    color: '#FFFFFF',
-  },
-
-  applyText: {
-    fontSize: 12,
-    fontWeight: '700',
-
-    color: '#FFFFFF',
-  },
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { height: 64, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  backButton: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: small ? 20 : 22, fontWeight: '800', color: colors.text },
+  headerSpacer: { width: 42 },
+  content: { paddingHorizontal: small ? 16 : 20, paddingBottom: 50 },
+  centerState: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  stateText: { marginTop: 10, color: colors.textSecondary, fontSize: 13 },
+  profileHero: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 22, padding: 15, flexDirection: 'row', alignItems: 'center', marginBottom: 22, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  avatarWrap: { width: 82, height: 82, borderRadius: 24, overflow: 'visible', backgroundColor: colors.primarySoft, marginRight: 14 },
+  profileImage: { width: '100%', height: '100%', borderRadius: 24 },
+  heroText: { flex: 1 },
+  heroName: { fontSize: small ? 20 : 22, fontWeight: '800', color: colors.text },
+  heroEmail: { marginTop: 3, fontSize: 12, color: colors.textSecondary },
+  ownerBadge: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', marginTop: 9, paddingHorizontal: 9, paddingVertical: 5, borderRadius: 14, backgroundColor: colors.primarySoft },
+  ownerBadgeText: { marginLeft: 5, fontSize: 10, fontWeight: '800', color: colors.primary },
+  errorCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.dangerSoft, borderRadius: 14, padding: 12, marginBottom: 16 },
+  errorText: { flex: 1, marginLeft: 8, color: colors.danger, fontSize: 12, lineHeight: 17 },
+  sectionTitle: { fontSize: 18, fontWeight: '800', color: colors.text },
+  sectionSubtitle: { marginTop: 3, marginBottom: 12, fontSize: 12, lineHeight: 17, color: colors.textSecondary },
+  formCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: 15 },
+  fieldGroup: { marginBottom: 15 },
+  label: { marginBottom: 7, fontSize: 11, fontWeight: '800', color: '#53686A' },
+  inputWrap: { minHeight: 50, borderWidth: 1, borderColor: '#D7E3E2', borderRadius: 14, backgroundColor: '#FCFEFD', paddingHorizontal: 13, flexDirection: 'row', alignItems: 'center' },
+  input: { flex: 1, marginLeft: 9, paddingVertical: 11, fontSize: 14, color: colors.text },
+  multilineWrap: { minHeight: 96, alignItems: 'flex-start' },
+  multilineIcon: { marginTop: 14 },
+  multilineInput: { minHeight: 86, textAlignVertical: 'top', paddingTop: 13 },
+  readOnlyWrap: { backgroundColor: '#F1F4F3' },
+  readOnlyInput: { color: colors.textSecondary },
+  infoNotice: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 13, backgroundColor: colors.primarySoft, borderRadius: 14, padding: 12 },
+  infoNoticeText: { flex: 1, marginLeft: 8, fontSize: 11, lineHeight: 16, color: colors.primaryDark },
+  saveButton: { height: 52, marginTop: 22, borderRadius: 15, backgroundColor: colors.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  saveButtonText: { marginLeft: 7, color: '#FFF', fontSize: 14, fontWeight: '800' },
+  disabledButton: { opacity: 0.65 },
+  cancelButton: { height: 46, alignItems: 'center', justifyContent: 'center' },
+  cancelButtonText: { color: colors.textSecondary, fontSize: 13, fontWeight: '700' },
+
+  cameraBadge: { position: 'absolute', right: -4, bottom: -4, width: 34, height: 34, borderRadius: 17, backgroundColor: colors.primary, borderWidth: 3, borderColor: colors.background, alignItems: 'center', justifyContent: 'center' },
+  changePhotoButton: { alignSelf: 'flex-start', marginTop: 8, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, backgroundColor: colors.primarySoft },
+  changePhotoText: { fontSize: 10, fontWeight: '800', color: colors.primary },
 });
 
 export default styles;

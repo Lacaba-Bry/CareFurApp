@@ -78,16 +78,15 @@ const styles =
     },
 
     title: {
-      fontFamily:
-        'DancingScript_700Bold',
-
       fontSize:
         isSmallPhone
-          ? 31
-          : 35,
+          ? 21
+          : 23,
+
+      fontWeight: '900',
 
       color:
-        '#14646B',
+        '#173F43',
     },
 
     headerSpacer: {
@@ -515,6 +514,19 @@ const styles =
 
       color:
         '#FFFFFF',
+    },
+
+    profileLinkRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 12,
+    },
+
+    profileLinkText: {
+      fontSize: isSmallPhone ? 11 : 12,
+      fontWeight: '700',
+      color: '#14646B',
+      marginRight: 5,
     },
     
   });

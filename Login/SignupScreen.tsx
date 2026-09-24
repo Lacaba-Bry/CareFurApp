@@ -122,6 +122,19 @@ export default function SignUpScreen({ navigation }: any) {
       return;
     }
 
+    // 3. Keep public.users in sync for messaging/conversation foreign keys.
+    // This is safe to retry because the id is the authenticated user's id.
+    const { error: userProfileError } = await supabase.from('users').upsert({
+      id: authData.user.id,
+      full_name: fullName.trim(),
+      email: email.trim().toLowerCase(),
+      role: 'owner',
+    }, { onConflict: 'id' });
+
+    if (userProfileError) {
+      console.warn('Public users profile warning:', userProfileError);
+    }
+
     // Success
     alert('Account created successfully!');
     navigation.navigate('Login');

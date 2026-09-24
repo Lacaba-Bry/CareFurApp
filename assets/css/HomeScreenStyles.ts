@@ -17,33 +17,31 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
 
-  hello: {
-    fontSize: 36,
-    lineHeight: 37,
-    fontStyle: 'italic',
+  greeting: {
+    fontSize: 27,
+    lineHeight: 33,
     fontWeight: '700',
-    color: '#111',
+    letterSpacing: -0.5,
+    color: '#173F43',
   },
 
-  name: {
-    fontSize: 39,
-    lineHeight: 40,
-    fontStyle: 'italic',
-    fontWeight: '700',
-    color: '#111',
+  greetingName: {
+    fontWeight: '900',
+    color: '#14646B',
   },
 
   subtitle: {
     fontSize: 12,
-    marginTop: 1,
-    color: '#555',
+    lineHeight: 18,
+    marginTop: 4,
+    color: '#6F8284',
   },
 
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginTop: 40,
+    marginTop: 26,
   },
 
   card: {

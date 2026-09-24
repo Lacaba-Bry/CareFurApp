@@ -1,277 +1,73 @@
-import {
-  StyleSheet,
-  Dimensions,
-} from 'react-native';
+import { Dimensions, StyleSheet } from 'react-native';
+import { colors } from '../../lib/theme';
 
 const { width, height } = Dimensions.get('window');
-
-const isSmallPhone = width < 360;
-const isLargePhone = width > 430;
-
-const cameraHeight = Math.min(
-  Math.max(height * 0.27, 180),
-  240
-);
-
-const snapshotHeight = Math.min(
-  Math.max(height * 0.25, 180),
-  255
-);
+const cameraHeight = Math.min(Math.max(height * 0.31, 215), 305);
+const small = width < 360;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFDF8',
-  },
+  container: { flex: 1, backgroundColor: colors.background },
+  content: { paddingHorizontal: small ? 15 : 18, paddingTop: 18, paddingBottom: 96 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 },
+  headerText: { flex: 1, paddingRight: 12 },
+  pageTitle: { fontSize: 25, fontWeight: '900', letterSpacing: -0.4, color: colors.text },
+  pageSubtitle: { marginTop: 3, fontSize: 11, lineHeight: 16, color: colors.textSecondary },
+  refreshButton: { width: 42, height: 42, borderRadius: 14, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
 
-  header: {
-    height: isSmallPhone ? 75 : 85,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-  },
+  petCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 19, padding: 12, marginBottom: 12 },
+  petImage: { width: 52, height: 52, borderRadius: 16, marginRight: 10 },
+  petInfo: { flex: 1 },
+  petName: { fontSize: 17, fontWeight: '900', color: colors.text },
+  petMeta: { marginTop: 3, fontSize: 10, color: colors.textSecondary },
+  onlineBadge: { flexDirection: 'row', alignItems: 'center', borderRadius: 13, backgroundColor: colors.successSoft, paddingHorizontal: 9, paddingVertical: 6 },
+  onlineDot: { width: 6, height: 6, borderRadius: 3, marginRight: 5, backgroundColor: colors.success },
+  onlineText: { fontSize: 9.5, fontWeight: '800', color: colors.success },
+  offlineBadge: { backgroundColor: colors.dangerSoft },
+  offlineDot: { backgroundColor: colors.danger },
+  offlineText: { color: colors.danger },
+  notice: { flexDirection: 'row', alignItems: 'center', borderRadius: 14, padding: 11, marginBottom: 12, backgroundColor: colors.warningSoft },
+  noticeText: { flex: 1, marginLeft: 7, fontSize: 10.5, color: colors.warning },
 
-  backButton: {
-    width: 35,
-    height: 45,
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-  },
+  cameraCard: { overflow: 'hidden', borderRadius: 21, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  cameraHeader: { height: 58, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  cameraTitle: { fontSize: 13.5, fontWeight: '900', color: colors.text },
+  cameraSubtitle: { marginTop: 2, fontSize: 9, color: colors.textMuted },
+  cameraContainer: { height: cameraHeight, backgroundColor: '#101515', position: 'relative' },
+  cameraWebView: { flex: 1, backgroundColor: '#101515' },
+  webCameraWrapper: { flex: 1, position: 'relative', backgroundColor: '#101515' },
+  cameraLoader: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F3F8F7' },
+  cameraLoadingText: { marginTop: 10, fontSize: 11, fontWeight: '700', color: colors.primary },
+  cameraError: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28, backgroundColor: '#F3F8F7' },
+  cameraErrorIcon: { width: 58, height: 58, borderRadius: 20, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  cameraErrorTitle: { marginTop: 10, fontSize: 16, fontWeight: '900', color: colors.text },
+  cameraErrorText: { marginTop: 5, textAlign: 'center', fontSize: 10.5, lineHeight: 16, color: colors.textSecondary },
+  retryButton: { marginTop: 13, minHeight: 40, borderRadius: 13, paddingHorizontal: 16, backgroundColor: colors.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  retryText: { marginLeft: 6, fontSize: 11, fontWeight: '800', color: '#FFF' },
 
-  headerCenter: {
-    flex: 1,
-    alignItems: 'center',
-    marginRight: 35,
-  },
+  cameraActions: { flexDirection: 'row', gap: 8, padding: 11 },
+  captureButton: { flex: 1, minHeight: 44, borderRadius: 13, backgroundColor: colors.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  captureButtonText: { marginLeft: 7, fontSize: 11, fontWeight: '900', color: '#FFF' },
+  secondaryAction: { minWidth: 104, minHeight: 44, borderRadius: 13, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  secondaryActionText: { marginLeft: 5, fontSize: 10.5, fontWeight: '800', color: colors.primary },
 
-  title: {
-    fontSize: isSmallPhone
-      ? 23
-      : isLargePhone
-      ? 28
-      : 26,
-
-    fontStyle: 'italic',
-    fontWeight: '700',
-    color: '#111',
-  },
-
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 3,
-  },
-
-  info: {
-    fontSize: isSmallPhone ? 11 : 13,
-    color: '#666',
-    marginHorizontal: 6,
-  },
-
-  bold: {
-    fontWeight: '700',
-    color: '#111',
-  },
-
-  cameraContainer: {
-    width: '100%',
-    height: cameraHeight,
-    position: 'relative',
-    backgroundColor: '#111',
-    overflow: 'hidden',
-  },
-
-  cameraWebView: {
-    flex: 1,
-    width: '100%',
-    backgroundColor: '#111',
-  },
-
-  webCameraWrapper: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
-    position: 'relative',
-    backgroundColor: '#111',
-  },
-
-  cameraLoader: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: '#FFFDF8',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
-  },
-
-  cameraLoadingText: {
-    marginTop: 10,
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#14646B',
-  },
-
-  cameraError: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 25,
-    backgroundColor: '#E5F5F4',
-  },
-
-  cameraErrorTitle: {
-    marginTop: 7,
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#16444A',
-  },
-
-  cameraErrorText: {
-    marginTop: 5,
-    maxWidth: 280,
-    fontSize: 11,
-    lineHeight: 16,
-    textAlign: 'center',
-    color: '#666',
-  },
-
-  retryButton: {
-    marginTop: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 7,
-    borderRadius: 18,
-    backgroundColor: '#14646B',
-    gap: 5,
-  },
-
-  retryText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#FFF',
-  },
-
-  fullscreen: {
-    alignSelf: 'center',
-    marginTop: 3,
-    paddingHorizontal: 14,
-    paddingVertical: 3,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 14,
-    backgroundColor: '#A5A5A5',
-    gap: 5,
-  },
-
-  fullText: {
-    fontSize: 11,
-    color: '#FFF',
-  },
-
-  captureSection: {
-    marginTop: 5,
-    paddingHorizontal: 10,
-  },
-
-  line: {
-    height: 1,
-    backgroundColor: '#D7D7D7',
-  },
-
-  captureTitle: {
-    marginVertical: 3,
-    textAlign: 'center',
-    fontSize: isSmallPhone ? 13 : 14,
-    fontWeight: '700',
-    color: '#111',
-  },
-
-  count: {
-    marginTop: 2,
-    textAlign: 'center',
-    fontSize: isSmallPhone ? 13 : 14,
-    fontWeight: '700',
-    color: '#111',
-  },
-
-  snapshotRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    marginTop: 3,
-  },
-
-  snapshot: {
-    width: '76%',
-    height: snapshotHeight,
-    borderRadius: 15,
-    backgroundColor: '#111',
-  },
-
-  photos: {
-    alignSelf: 'center',
-    marginTop: 5,
-    paddingHorizontal: 18,
-    paddingVertical: 5,
-    borderRadius: 15,
-    backgroundColor: '#E5F5F4',
-  },
-
-  photosText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#16444A',
-  },
-
-  details: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    marginTop: 9,
-  },
-
-  detailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-
-  detailText: {
-    fontSize: isSmallPhone ? 11 : 12,
-    color: '#666',
-  },
-
-  controls: {
-    width: '80%',
-    height: 52,
-    alignSelf: 'center',
-    marginTop: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    borderRadius: 14,
-    backgroundColor: '#275861',
-  },
-
-  captureButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    borderWidth: 3,
-    borderColor: '#FFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  captureInner: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#DCE9EB',
-  },
+  snapshotHeader: { marginTop: 22, marginBottom: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  sectionTitle: { fontSize: 18, fontWeight: '900', color: colors.text },
+  sectionSubtitle: { marginTop: 2, fontSize: 10, color: colors.textSecondary },
+  snapshotCountBadge: { minWidth: 32, height: 32, paddingHorizontal: 8, borderRadius: 12, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  snapshotCount: { fontSize: 12, fontWeight: '900', color: colors.primary },
+  latestSnapshotCard: { borderRadius: 19, overflow: 'hidden', borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  latestSnapshotImage: { width: '100%', height: 188, backgroundColor: '#EEF3F2' },
+  snapshotMetaBar: { minHeight: 58, paddingHorizontal: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  snapshotMetaTitle: { fontSize: 11, fontWeight: '800', color: colors.text },
+  snapshotMetaText: { marginTop: 2, fontSize: 9.5, color: colors.textSecondary },
+  snapshotStrip: { gap: 9, paddingTop: 10, paddingBottom: 4 },
+  snapshotThumbCard: { width: 104, borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  snapshotThumb: { width: '100%', height: 72, backgroundColor: '#EEF3F2' },
+  snapshotThumbTime: { paddingVertical: 7, textAlign: 'center', fontSize: 8.5, fontWeight: '700', color: colors.textSecondary },
+  emptySnapshots: { minHeight: 150, borderRadius: 19, borderWidth: 1, borderColor: colors.border, borderStyle: 'dashed', backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', padding: 22 },
+  emptySnapshotIcon: { width: 48, height: 48, borderRadius: 16, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  emptySnapshotTitle: { marginTop: 9, fontSize: 14, fontWeight: '900', color: colors.text },
+  emptySnapshotText: { marginTop: 4, maxWidth: 280, textAlign: 'center', fontSize: 9.5, lineHeight: 14, color: colors.textSecondary },
 });
 
 export default styles;

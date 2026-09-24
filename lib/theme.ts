@@ -1,0 +1,30 @@
+export const colors = {
+  background: '#FFFDF8',
+  surface: '#FFFFFF',
+  primary: '#14646B',
+  primaryDark: '#16444A',
+  primarySoft: '#E7F4F4',
+  primaryMuted: '#BFD9D8',
+  accent: '#D06435',
+  accentSoft: '#F9E8DF',
+  sand: '#D6C292',
+  sandSoft: '#F3EBDD',
+  text: '#173F43',
+  textSecondary: '#6F8284',
+  textMuted: '#8A999A',
+  border: '#DFE9E8',
+  success: '#338B4A',
+  successSoft: '#E8F7EC',
+  warning: '#A56B16',
+  warningSoft: '#FFF3D8',
+  danger: '#B84E4E',
+  dangerSoft: '#FBEAEA',
+  disabled: '#C8D2D1',
+};
+
+export const radii = {
+  small: 10,
+  medium: 14,
+  large: 20,
+  xl: 24,
+};

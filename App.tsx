@@ -47,6 +47,7 @@ import EditProfileScreen from './Login/EditProfileScreen';
 import BoardingDetails from './Login/BoardingDetails';
 import Rooms from './Login/Rooms';
 import BookingHistory from './Login/BookingHistory';
+import PetProfile from './Login/PetProfile';
 
 const Stack =
   createNativeStackNavigator();
@@ -476,6 +477,11 @@ export default function App() {
           component={
             BookingHistory
           }
+        />
+
+        <Stack.Screen
+          name="PetProfile"
+          component={PetProfile}
         />
       </Stack.Navigator>
     </NavigationContainer>

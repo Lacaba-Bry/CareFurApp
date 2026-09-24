@@ -1,9 +1,6 @@
 import React from 'react';
-
-import {
-  createBottomTabNavigator,
-} from '@react-navigation/bottom-tabs';
-
+import { View } from 'react-native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
 import HomeScreen from '../HomeScreen';
@@ -11,34 +8,31 @@ import Pets from '../Pets';
 import CameraScreen from '../CameraScreen';
 import FeedingLogsScreen from '../FeedingLogsScreen';
 import ProfileScreen from '../ProfileScreen';
+import { colors } from '../../lib/theme';
 
 const Tab = createBottomTabNavigator();
 
-export default function Nav({
-  route,
-}: any) {
-  /*
-   * CodeScreen currently opens MainTabs like:
-   *
-   * {
-   *   screen: "Home",
-   *   params: {
-   *     accessCode,
-   *     booking,
-   *     pet,
-   *     room,
-   *     feedingSchedules,
-   *     access
-   *   }
-   * }
-   *
-   * Therefore route.params.params contains
-   * the shared boarding information.
-   */
-  const sharedParams =
-    route?.params?.params ??
-    route?.params ??
-    {};
+function TabIcon({ name, outline, focused }: { name: any; outline: any; focused: boolean }) {
+  return (
+    <View style={{
+      width: 42,
+      height: 36,
+      borderRadius: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: focused ? colors.primarySoft : 'transparent',
+    }}>
+      <Ionicons
+        name={focused ? name : outline}
+        size={22}
+        color={focused ? colors.primary : colors.textMuted}
+      />
+    </View>
+  );
+}
+
+export default function Nav({ route }: any) {
+  const sharedParams = route?.params?.params ?? route?.params ?? {};
 
   return (
     <Tab.Navigator
@@ -46,137 +40,51 @@ export default function Nav({
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
-
-        tabBarActiveTintColor:
-          '#FFFFFF',
-
-        tabBarInactiveTintColor:
-          '#FFFFFF',
-
+        tabBarHideOnKeyboard: true,
         tabBarStyle: {
-          backgroundColor:
-            '#53B5C2',
-
-          height: 58,
-
-          borderTopWidth: 0,
-
-          paddingTop: 5,
-          paddingBottom: 5,
-
-          elevation: 0,
+          backgroundColor: colors.surface,
+          height: 66,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+          paddingTop: 8,
+          paddingBottom: 8,
+          elevation: 10,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.06,
+          shadowRadius: 10,
         },
       }}
     >
-      {/* HOME */}
-
       <Tab.Screen
         name="Home"
         component={HomeScreen}
-        initialParams={
-          sharedParams
-        }
-        options={{
-          tabBarIcon: ({
-            color,
-          }) => (
-            <Ionicons
-              name="home"
-              size={23}
-              color={color}
-            />
-          ),
-        }}
+        initialParams={sharedParams}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon name="home" outline="home-outline" focused={focused} /> }}
       />
-
-      {/* PETS */}
-
       <Tab.Screen
         name="Pets"
         component={Pets}
-        initialParams={
-          sharedParams
-        }
-        options={{
-          tabBarIcon: ({
-            color,
-          }) => (
-            <Ionicons
-              name="paw"
-              size={23}
-              color={color}
-            />
-          ),
-        }}
+        initialParams={sharedParams}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon name="paw" outline="paw-outline" focused={focused} /> }}
       />
-
-      {/* CAMERA */}
-
       <Tab.Screen
         name="Camera"
-        component={
-          CameraScreen
-        }
-        initialParams={
-          sharedParams
-        }
-        options={{
-          tabBarIcon: ({
-            color,
-          }) => (
-            <Ionicons
-              name="camera"
-              size={23}
-              color={color}
-            />
-          ),
-        }}
+        component={CameraScreen}
+        initialParams={sharedParams}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon name="camera" outline="camera-outline" focused={focused} /> }}
       />
-
-      {/* CARE / FEEDING LOGS */}
-
       <Tab.Screen
         name="Care"
-        component={
-          FeedingLogsScreen
-        }
-        initialParams={
-          sharedParams
-        }
-        options={{
-          tabBarIcon: ({
-            color,
-          }) => (
-            <Ionicons
-              name="nutrition"
-              size={23}
-              color={color}
-            />
-          ),
-        }}
+        component={FeedingLogsScreen}
+        initialParams={sharedParams}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon name="nutrition" outline="nutrition-outline" focused={focused} /> }}
       />
-
-      {/* PROFILE */}
-
       <Tab.Screen
         name="Profile"
-        component={
-          ProfileScreen
-        }
-        initialParams={
-          sharedParams
-        }
-        options={{
-          tabBarIcon: ({
-            color,
-          }) => (
-            <Ionicons
-              name="person"
-              size={23}
-              color={color}
-            />
-          ),
-        }}
+        component={ProfileScreen}
+        initialParams={sharedParams}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon name="person" outline="person-outline" focused={focused} /> }}
       />
     </Tab.Navigator>
   );
