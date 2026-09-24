@@ -1,164 +1,497 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import {
+  StyleSheet,
+  Dimensions,
+} from 'react-native';
 
-const { width } = Dimensions.get('window');
+const { width } =
+  Dimensions.get('window');
 
-const isSmallPhone = width < 360;
-const isLargePhone = width > 430;
+const small =
+  width < 360;
 
-const titleSize = isSmallPhone
-  ? 23
-  : isLargePhone
-  ? 29
-  : 27;
+const styles =
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor:
+        '#FFFDF8',
+    },
 
-const infoSize = isSmallPhone
-  ? 12
-  : isLargePhone
-  ? 15
-  : 14;
+    // HEADER
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFDF8',
-  },
+    header: {
+      height: 64,
+      paddingHorizontal: 18,
 
-  // PHOTO - 50%
-  imageContainer: {
-    flex: 1,
-    width: '100%',
-    position: 'relative',
-  },
+      flexDirection:
+        'row',
 
-  petImage: {
-    width: '100%',
-    height: '100%',
-  },
+      alignItems:
+        'center',
 
-  back: {
-    position: 'absolute',
-    top: 18,
-    left: 10,
-    zIndex: 5,
-  },
+      justifyContent:
+        'space-between',
+    },
 
-  more: {
-    position: 'absolute',
-    top: 20,
-    right: 10,
-    zIndex: 5,
-  },
+    headerButton: {
+      width: 44,
+      height: 44,
 
-  slider: {
-    position: 'absolute',
-    bottom: 28,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 5,
-  },
+      justifyContent:
+        'center',
 
-  sliderActive: {
-    width: 40,
-    height: 3,
-    borderRadius: 3,
-    backgroundColor: '#5EC8C6',
-    marginRight: 5,
-  },
+      alignItems:
+        'center',
+    },
 
-  sliderDot: {
-    width: 7,
-    height: 3,
-    borderRadius: 3,
-    backgroundColor: '#FFF',
-    marginRight: 5,
-  },
+    title: {
+      fontFamily:
+        'DancingScript_700Bold',
 
-  // CARD - 50%
-  card: {
-    flex: 1,
-    width: '100%',
-    position: 'relative',
-    marginTop: -25,
-    backgroundColor: '#FFFDF8',
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    overflow: 'hidden',
-    zIndex: 2,
-  },
+      fontSize:
+        small ? 29 : 34,
 
-  // DOG WATERMARK
-  watermark: {
-    position: 'absolute',
-    width: width * 0.72,
-    height: width * 0.72,
-    maxWidth: 350,
-    maxHeight: 350,
-    minWidth: 250,
-    minHeight: 250,
-    right: -25,
-    bottom: -15,
-    opacity: 0.18,
-    zIndex: 0,
-  },
+      color:
+        '#14646B',
+    },
 
-  // CENTER MAX + INFORMATION
-  innerContent: {
-    flex: 1,
-    width: '88%',
-    maxWidth: 430,
-    alignSelf: 'center',
-    justifyContent: 'center',
-    zIndex: 2,
-  },
+    editButton: {
+      minWidth: 70,
+      height: 38,
 
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: isSmallPhone ? 10 : 14,
-  },
+      paddingHorizontal: 12,
 
-  petName: {
-    fontSize: titleSize,
-    lineHeight: titleSize + 3,
-    fontWeight: '700',
-    color: '#16444A',
-    marginRight: 6,
-    flexShrink: 1,
-  },
+      borderRadius: 19,
 
-  infoContainer: {
-    width: '100%',
-  },
+      backgroundColor:
+        '#E7F4F4',
 
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    minHeight: isSmallPhone ? 25 : 29,
-  },
+      flexDirection:
+        'row',
 
-  label: {
-    width: '38%',
-    fontSize: infoSize,
-    color: '#777',
-  },
+      alignItems:
+        'center',
 
-  value: {
-    flex: 1,
-    fontSize: infoSize,
-    fontWeight: '700',
-    color: '#222',
-    flexShrink: 1,
-  },
+      justifyContent:
+        'center',
+    },
 
-  link: {
-    fontSize: infoSize,
-    fontWeight: '600',
-    color: '#1976D2',
-    textDecorationLine: 'underline',
-  },
-});
+    editButtonText: {
+      color:
+        '#14646B',
+
+      fontWeight:
+        '700',
+
+      fontSize: 13,
+
+      marginLeft: 5,
+    },
+
+    content: {
+      paddingHorizontal: 20,
+      paddingBottom: 60,
+    },
+
+    // PROFILE TOP
+
+    profileHeader: {
+      alignItems:
+        'center',
+
+      marginTop: 10,
+
+      marginBottom: 28,
+    },
+
+    imageContainer: {
+      position:
+        'relative',
+    },
+
+    petImage: {
+      width: 120,
+      height: 120,
+
+      borderRadius: 32,
+
+      borderWidth: 4,
+
+      borderColor:
+        '#FFFFFF',
+    },
+
+    pawBadge: {
+      position:
+        'absolute',
+
+      right: -5,
+      bottom: -5,
+
+      width: 38,
+      height: 38,
+
+      borderRadius: 19,
+
+      backgroundColor:
+        '#14646B',
+
+      justifyContent:
+        'center',
+
+      alignItems:
+        'center',
+
+      borderWidth: 3,
+
+      borderColor:
+        '#FFFDF8',
+    },
+
+    petName: {
+      marginTop: 14,
+
+      fontSize: 25,
+
+      fontWeight:
+        '800',
+
+      color:
+        '#173F43',
+    },
+
+    petSubtitle: {
+      marginTop: 3,
+
+      fontSize: 14,
+
+      color:
+        '#718587',
+    },
+
+    // SECTIONS
+
+    sectionTitle: {
+      fontSize: 17,
+
+      fontWeight:
+        '800',
+
+      color:
+        '#173F43',
+
+      marginTop: 8,
+
+      marginBottom: 12,
+    },
+
+    // VIEW MODE
+
+    infoCard: {
+      backgroundColor:
+        '#FFFFFF',
+
+      borderRadius: 20,
+
+      paddingHorizontal: 16,
+
+      paddingVertical: 5,
+
+      marginBottom: 24,
+
+      borderWidth: 1,
+
+      borderColor:
+        '#E3ECEC',
+
+      shadowColor:
+        '#000',
+
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+
+      shadowOpacity: 0.05,
+
+      shadowRadius: 8,
+
+      elevation: 2,
+    },
+
+    profileRow: {
+      minHeight: 66,
+
+      flexDirection:
+        'row',
+
+      alignItems:
+        'center',
+    },
+
+    profileRowVertical: {
+      minHeight: 78,
+      alignItems:
+        'flex-start',
+
+      paddingVertical: 14,
+    },
+
+    profileIcon: {
+      width: 38,
+      height: 38,
+
+      borderRadius: 12,
+
+      backgroundColor:
+        '#E7F4F4',
+
+      alignItems:
+        'center',
+
+      justifyContent:
+        'center',
+
+      marginRight: 12,
+    },
+
+    profileTextContainer: {
+      flex: 1,
+    },
+
+    profileLabel: {
+      fontSize: 11,
+
+      color:
+        '#839294',
+
+      marginBottom: 3,
+    },
+
+    profileValue: {
+      fontSize: 14,
+
+      lineHeight: 20,
+
+      fontWeight:
+        '600',
+
+      color:
+        '#344F52',
+
+      textTransform:
+        'none',
+    },
+
+    divider: {
+      height: 1,
+
+      backgroundColor:
+        '#EDF1F1',
+
+      marginLeft: 50,
+    },
+
+    // FORM
+
+    inputGroup: {
+      marginBottom: 16,
+    },
+
+    inputLabel: {
+      fontSize: 12,
+
+      fontWeight:
+        '700',
+
+      color:
+        '#53686A',
+
+      marginBottom: 7,
+    },
+
+    inputContainer: {
+      minHeight: 52,
+
+      borderRadius: 14,
+
+      borderWidth: 1,
+
+      borderColor:
+        '#DCE6E6',
+
+      backgroundColor:
+        '#FFFFFF',
+
+      paddingHorizontal: 14,
+
+      flexDirection:
+        'row',
+
+      alignItems:
+        'center',
+    },
+
+    input: {
+      flex: 1,
+
+      fontSize: 14,
+
+      color:
+        '#193E42',
+
+      marginLeft: 10,
+
+      paddingVertical: 12,
+    },
+
+    multilineContainer: {
+      minHeight: 100,
+
+      alignItems:
+        'flex-start',
+    },
+
+    multilineInput: {
+      minHeight: 90,
+
+      textAlignVertical:
+        'top',
+
+      paddingTop: 14,
+    },
+
+    multilineIcon: {
+      marginTop: 15,
+    },
+
+    inputSuffix: {
+      color:
+        '#718587',
+
+      fontSize: 13,
+
+      fontWeight:
+        '600',
+    },
+
+    // SEX BUTTONS
+
+    genderRow: {
+      flexDirection:
+        'row',
+
+      marginBottom: 18,
+
+      gap: 8,
+    },
+
+    genderButton: {
+      flex: 1,
+
+      minHeight: 44,
+
+      borderRadius: 12,
+
+      borderWidth: 1,
+
+      borderColor:
+        '#CDE0E0',
+
+      flexDirection:
+        'row',
+
+      alignItems:
+        'center',
+
+      justifyContent:
+        'center',
+
+      backgroundColor:
+        '#FFFFFF',
+    },
+
+    genderButtonActive: {
+      backgroundColor:
+        '#14646B',
+
+      borderColor:
+        '#14646B',
+    },
+
+    genderButtonText: {
+      marginLeft: 5,
+
+      color:
+        '#14646B',
+
+      fontWeight:
+        '700',
+
+      fontSize:
+        small ? 11 : 12,
+    },
+
+    genderButtonTextActive: {
+      color:
+        '#FFFFFF',
+    },
+
+    // BUTTONS
+
+    saveButton: {
+      height: 52,
+
+      borderRadius: 14,
+
+      backgroundColor:
+        '#14646B',
+
+      flexDirection:
+        'row',
+
+      alignItems:
+        'center',
+
+      justifyContent:
+        'center',
+
+      marginTop: 12,
+    },
+
+    saveButtonText: {
+      marginLeft: 7,
+
+      color:
+        '#FFFFFF',
+
+      fontSize: 14,
+
+      fontWeight:
+        '800',
+    },
+
+    cancelButton: {
+      height: 48,
+
+      alignItems:
+        'center',
+
+      justifyContent:
+        'center',
+
+      marginTop: 8,
+    },
+
+    cancelButtonText: {
+      color:
+        '#758789',
+
+      fontSize: 13,
+
+      fontWeight:
+        '700',
+    },
+  });
 
 export default styles;
