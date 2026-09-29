@@ -4,15 +4,11 @@
     "slug": "SnugglesApp",
     "version": "1.0.0",
     "orientation": "portrait",
-
     "icon": "./assets/Login/Logo.jpg",
-
     "userInterfaceStyle": "light",
-
     "ios": {
       "supportsTablet": true
     },
-
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#FFFDF8",
@@ -20,16 +16,20 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.carefur.SnugglesApp"
     },
-
     "web": {
       "favicon": "./assets/Login/Logo.jpg"
     },
-
     "plugins": [
       "expo-font",
       "expo-asset"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "cdc90232-0d2e-473d-bf48-3be8c9daa142"
+      }
+    }
   }
 }
