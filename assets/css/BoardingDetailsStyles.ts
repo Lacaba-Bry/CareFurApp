@@ -1,0 +1,81 @@
+import { Dimensions, StyleSheet } from 'react-native';
+import { colors } from '../../lib/theme';
+const { width } = Dimensions.get('window');
+const small = width < 360;
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { minHeight: 72, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: colors.border },
+  headerButton: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center' },
+  headerTextWrap: { flex: 1, alignItems: 'center' },
+  title: { fontSize: small ? 21 : 23, fontWeight: '900', color: colors.text },
+  headerSubtitle: { marginTop: 2, fontSize: 9.5, color: colors.textSecondary },
+  content: { paddingHorizontal: small ? 15 : 18, paddingTop: 16, paddingBottom: 40 },
+  centerState: { minHeight: 420, alignItems: 'center', justifyContent: 'center' },
+  stateText: { marginTop: 10, fontSize: 12, color: colors.textSecondary },
+  notice: { flexDirection: 'row', alignItems: 'center', borderRadius: 14, padding: 11, backgroundColor: colors.warningSoft, marginBottom: 12 },
+  noticeText: { flex: 1, marginLeft: 7, fontSize: 10.5, color: colors.warning },
+
+  heroCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 21, padding: 13, flexDirection: 'row', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 7, elevation: 2 },
+  petImage: { width: 66, height: 66, borderRadius: 19, marginRight: 12 },
+  petInfo: { flex: 1 },
+  petName: { fontSize: 20, fontWeight: '900', color: colors.text },
+  petMeta: { marginTop: 3, fontSize: 9.5, color: colors.textSecondary },
+  statusBadge: { alignSelf: 'flex-start', marginTop: 7, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 5, borderRadius: 13 },
+  statusDot: { width: 6, height: 6, borderRadius: 3, marginRight: 5 },
+  statusText: { fontSize: 9, fontWeight: '800' },
+  daysPill: { minWidth: 60, borderRadius: 16, backgroundColor: colors.primarySoft, paddingHorizontal: 9, paddingVertical: 10, alignItems: 'center' },
+  daysValue: { fontSize: 20, fontWeight: '900', color: colors.primary },
+  daysLabel: { fontSize: 8.5, color: colors.primary },
+
+  stayCard: { marginTop: 12, borderRadius: 20, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, padding: 13 },
+  roomHeaderRow: { flexDirection: 'row', alignItems: 'center' },
+  roomIcon: { width: 38, height: 38, borderRadius: 12, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
+  roomTextWrap: { flex: 1 },
+  roomLabel: { fontSize: 8.5, color: colors.textMuted },
+  roomValue: { marginTop: 2, fontSize: 14, fontWeight: '900', color: colors.text },
+  stayDivider: { height: 1, backgroundColor: '#EDF2F1', marginVertical: 12 },
+  dateTimeline: { flexDirection: 'row', alignItems: 'center' },
+  stayDateItem: { flex: 1, alignItems: 'center' },
+  stayDateIcon: { width: 30, height: 30, borderRadius: 10, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  stayDateLabel: { marginTop: 5, fontSize: 8.5, color: colors.textMuted },
+  stayDateValue: { marginTop: 2, fontSize: 10.5, fontWeight: '800', color: colors.text },
+  timelineConnector: { width: 34, alignItems: 'center' },
+  timelineLine: { width: 34, height: 1, backgroundColor: colors.primaryMuted },
+
+  sectionHeaderRow: { marginTop: 20, marginBottom: 9, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  sectionTitle: { marginTop: 20, fontSize: 17, fontWeight: '900', color: colors.text },
+  sectionSubtitle: { marginTop: 2, fontSize: 10, color: colors.textSecondary },
+  countPill: { minWidth: 30, height: 30, borderRadius: 11, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  countText: { fontSize: 11, fontWeight: '900', color: colors.primary },
+
+  feedingCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 19, paddingHorizontal: 13 },
+  feedingRow: { minHeight: 78, flexDirection: 'row', alignItems: 'center', paddingVertical: 11 },
+  rowBorder: { borderBottomWidth: 1, borderBottomColor: '#EDF2F1' },
+  feedingTimeWrap: { width: 72 },
+  feedingTimeText: { fontSize: 12, fontWeight: '900', color: colors.text },
+  feedingDate: { marginTop: 2, fontSize: 8.5, color: colors.textMuted },
+  feedingInfo: { flex: 1, paddingRight: 5 },
+  feedingMethod: { fontSize: 11, fontWeight: '800', color: colors.text },
+  feedingMeta: { marginTop: 2, fontSize: 9.5, color: colors.textSecondary },
+  feedingNote: { marginTop: 3, fontSize: 9, lineHeight: 13, color: colors.textMuted },
+  smallStatus: { borderRadius: 12, paddingHorizontal: 8, paddingVertical: 5 },
+  smallStatusText: { fontSize: 8.5, fontWeight: '800' },
+  emptyInline: { paddingVertical: 26, alignItems: 'center' },
+  emptyInlineText: { marginTop: 7, fontSize: 10.5, color: colors.textSecondary },
+
+  notesCard: { marginTop: 9, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 19, paddingHorizontal: 13 },
+  infoRow: { minHeight: 76, flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 14 },
+  infoIcon: { width: 36, height: 36, borderRadius: 12, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
+  infoText: { flex: 1 },
+  infoLabel: { fontSize: 9, color: colors.textMuted },
+  infoValue: { marginTop: 3, fontSize: 11, lineHeight: 17, color: colors.text },
+
+  bookingCodeCard: { marginTop: 14, flexDirection: 'row', alignItems: 'center', padding: 13, borderRadius: 17, backgroundColor: colors.sandSoft },
+  bookingCodeIcon: { width: 36, height: 36, borderRadius: 12, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  bookingCodeText: { flex: 1, marginLeft: 9 },
+  bookingCodeLabel: { fontSize: 8.5, color: colors.textMuted },
+  bookingCodeValue: { marginTop: 2, fontSize: 10.5, fontWeight: '800', color: colors.text },
+});
+
+export default styles;
