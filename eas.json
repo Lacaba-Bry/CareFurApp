@@ -11,8 +11,5 @@
       }
     },
     "production": {}
-  },
-  "cli": {
-    "appVersionSource": "remote"
   }
 }

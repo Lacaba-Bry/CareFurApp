@@ -8,6 +8,7 @@ import {
   Text,
   TextInput,
   Alert,
+  Platform,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -19,6 +20,7 @@ import { supabase } from '../lib/supabase';
 import { colors } from '../lib/theme';
 import styles from '../assets/css/BoardingDetailsStyles';
 import {isSharedViewer} from '../lib/accessMode';
+import { getBookingMonitoring, type FoodEvent } from '../lib/bookingMonitoring';
 
 const BOARDING_CODE_STORAGE_KEY = 'boarding_access_code';
 
@@ -66,6 +68,8 @@ export default function BoardingDetails({ navigation, route }: any) {
   const [pet, setPet] = useState<Pet | null>(params.pet ?? null);
   const [room, setRoom] = useState<Room | null>(params.room ?? null);
   const [feedings, setFeedings] = useState<FeedingSchedule[]>(params.feedingSchedules ?? []);
+  const [confirmedFeedingIds, setConfirmedFeedingIds] = useState<Set<string>>(new Set());
+  const [foodEvents, setFoodEvents] = useState<FoodEvent[]>([]);
   const [loading, setLoading] = useState(!params.booking);
   const [extraDays, setExtraDays] = useState(1);
   const shared = isSharedViewer(route?.params);
@@ -96,6 +100,18 @@ export default function BoardingDetails({ navigation, route }: any) {
       setPet(data.pet ?? null);
       setRoom(data.room ?? null);
       setFeedings(data.feedingSchedules ?? []);
+      // Monitoring is optional; a temporary sensor outage must not break stay details.
+      try {
+        const monitoring = await getBookingMonitoring(code);
+        setConfirmedFeedingIds(new Set((monitoring.feedingLogs ?? [])
+          .filter((log: any) => log.result === 'success' && log.schedule_id)
+          .map((log: any) => String(log.schedule_id))));
+        setFoodEvents(monitoring.foodEvents ?? []);
+      } catch (monitorError) {
+        console.warn('Optional feeding monitoring unavailable:', monitorError);
+        setConfirmedFeedingIds(new Set());
+        setFoodEvents([]);
+      }
     } catch (err: any) {
       console.error('BoardingDetails error:', err);
       setError(err?.message || 'Unable to load boarding details.');
@@ -124,8 +140,8 @@ export default function BoardingDetails({ navigation, route }: any) {
       if (result?.error) throw new Error(result.error);
       setExtensionStatus('pending');
       setExtensionReason('');
-      Alert.alert('Request sent', 'CareFur staff will review your extension. Your checkout date has not changed yet.');
-    } catch (err: any) { Alert.alert('Unable to request extension', err?.message || 'Please try again.'); }
+      showMessage('Request sent', 'CareFur staff will review your extension. Your checkout date has not changed yet.');
+    } catch (err: any) { showMessage('Unable to request extension', err?.message || 'Please try again.'); }
     finally { setSending(false); }
   };
 
@@ -148,6 +164,23 @@ export default function BoardingDetails({ navigation, route }: any) {
     } catch (err: any) { Alert.alert('Unable to send review', err?.message || 'Please try again.'); }
     finally { setSending(false); }
   };
+
+  const possibleEatingScheduleIds = useMemo(() => {
+    const matched = new Set<string>();
+    const ordered = [...feedings].sort((a, b) => Date.parse(a.scheduled_at) - Date.parse(b.scheduled_at));
+    const signals = foodEvents.filter((event) => event.event_type === 'possible_eating')
+      .map((event) => Date.parse(event.created_at)).filter(Number.isFinite);
+    for (const t of signals) {
+      for (let i = ordered.length - 1; i >= 0; i--) {
+        const at = Date.parse(ordered[i].scheduled_at);
+        if (!Number.isFinite(at) || t < at || t - at > 3600000) continue;
+        if (i + 1 < ordered.length && t >= Date.parse(ordered[i + 1].scheduled_at)) continue;
+        matched.add(ordered[i].id);
+        break;
+      }
+    }
+    return matched;
+  }, [feedings, foodEvents]);
 
   const sortedFeedings = useMemo(
     () => [...feedings].sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()),
@@ -312,7 +345,11 @@ export default function BoardingDetails({ navigation, route }: any) {
                       </Text>
                       {feeding.instructions ? <Text style={styles.feedingNote} numberOfLines={2}>{feeding.instructions}</Text> : null}
                     </View>
-                    <StatusChip status={feeding.status || 'pending'} />
+                    <StatusChip status={feeding.status === 'completed' || confirmedFeedingIds.has(feeding.id)
+                      ? 'completed'
+                      : possibleEatingScheduleIds.has(feeding.id)
+                        ? 'possible_eating'
+                        : feeding.status || 'pending'} />
                   </View>
                 ))
               )}
@@ -340,6 +377,15 @@ export default function BoardingDetails({ navigation, route }: any) {
   );
 }
 
+
+function showMessage(title: string, message: string) {
+  if (Platform.OS === 'web') {
+    window.alert(`${title}\n\n${message}`);
+  } else {
+    Alert.alert(title, message);
+  }
+}
+
 function StayDate({ icon, label, value }: any) {
   return (
     <View style={styles.stayDateItem}>
@@ -353,11 +399,12 @@ function StayDate({ icon, label, value }: any) {
 function StatusChip({ status }: { status: string }) {
   const done = status === 'completed';
   const missed = status === 'missed' || status === 'cancelled';
-  const color = done ? colors.success : missed ? colors.danger : colors.warning;
-  const bg = done ? colors.successSoft : missed ? colors.dangerSoft : colors.warningSoft;
+  const possibleEating = status === 'possible_eating';
+  const color = done ? colors.success : missed ? colors.danger : possibleEating ? colors.primary : colors.warning;
+  const bg = done ? colors.successSoft : missed ? colors.dangerSoft : possibleEating ? '#E6F5F1' : colors.warningSoft;
   return (
     <View style={[styles.smallStatus, { backgroundColor: bg }]}>
-      <Text style={[styles.smallStatusText, { color }]}>{capitalize(status)}</Text>
+      <Text style={[styles.smallStatusText, { color }]}>{possibleEating ? 'Possible eating' : done ? 'Done' : capitalize(status)}</Text>
     </View>
   );
 }

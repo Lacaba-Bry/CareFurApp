@@ -24,6 +24,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { supabase } from './lib/supabase';
+import { configureFeedingNotifications, registerFeedingPush } from './lib/feedingPush';
 
 // SPLASH
 import AnimatedSplash from './Login/AnimatedSplash';
@@ -32,6 +33,8 @@ import AnimatedSplash from './Login/AnimatedSplash';
 import WelcomeScreen from './Login/WelcomeScreen';
 import LoginScreen from './Login/LoginScreen';
 import SignUpScreen from './Login/SignupScreen';
+import ForgotPasswordScreen from './Login/ForgotPasswordScreen';
+import LegalInfoScreen from './Login/LegalInfoScreen';
 
 // BOARDING CODE
 import CodeScreen from './Login/CodeScreen';
@@ -332,6 +335,15 @@ export default function App() {
     };
   }, []);
 
+  // Register a native push token only for a signed-in customer.
+  // Failures must never block login, booking, or navigation.
+  useEffect(() => {
+    if (!session?.user) return;
+    configureFeedingNotifications()
+      .then(() => registerFeedingPush())
+      .catch((error) => console.warn('Feeding push registration unavailable:', error));
+  }, [session?.user?.id]);
+
   // ============================================================
   // SPLASH
   // ============================================================
@@ -420,6 +432,9 @@ export default function App() {
             SignUpScreen
           }
         />
+
+        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+        <Stack.Screen name="LegalInfo" component={LegalInfoScreen} />
 
         {/* ================================================= */}
         {/* BOARDING CODE */}

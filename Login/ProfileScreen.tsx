@@ -1,3 +1,4 @@
+import { unregisterFeedingPush } from '../lib/feedingPush';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -137,6 +138,7 @@ export default function ProfileScreen({ navigation, route }: any) {
       await AsyncStorage.removeItem(BOARDING_CODE_STORAGE_KEY);
       const { data: sessionData } = await supabase.auth.getSession();
       if (sessionData.session) {
+        await unregisterFeedingPush();
         const { error } = await supabase.auth.signOut();
         if (error) throw error;
       }

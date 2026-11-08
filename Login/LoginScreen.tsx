@@ -1,136 +1,75 @@
-import { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  SafeAreaView,
-  Image,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
-  Dimensions,
-  Alert,
-  ActivityIndicator,
+  StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image,
+  TextInput, KeyboardAvoidingView, Platform, ScrollView,
+  Alert, ActivityIndicator, Keyboard,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useFonts, DancingScript_700Bold } from '@expo-google-fonts/dancing-script';
 import { supabase } from '../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const { height } = Dimensions.get('window');
-
 export default function LoginScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
+  const passwordRef = useRef<TextInput>(null);
+  const [fontsLoaded] = useFonts({ DancingScript_700Bold });
 
-  const [fontsLoaded] = useFonts({
-    DancingScript_700Bold,
-  });
-
-  if (!fontsLoaded) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
+  React.useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardOpen(true));
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardOpen(false));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      if (Platform.OS === 'web') {
-        window.alert('Please enter email and password');
-      } else {
-        Alert.alert('Error', 'Please enter email and password');
-      }
-
+    if (!email.trim() || !password) {
+      if (Platform.OS === 'web') window.alert('Please enter your email and password.');
+      else Alert.alert('Missing details', 'Please enter your email and password.');
       return;
     }
-
     try {
+      Keyboard.dismiss();
       setLoading(true);
-
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
-        password: password,
+        email: email.trim().toLowerCase(), password,
       });
-
-      if (error) {
-        console.log('Login error:', error.message);
-
-        if (Platform.OS === 'web') {
-          window.alert('Login Failed: ' + error.message);
-        } else {
-          Alert.alert('Login Failed', error.message);
-        }
-
-        return;
-      }
-
-      if (!data.session || !data.user) {
-        throw new Error('Login succeeded but no session was created.');
-      }
-
-      console.log('Login success!');
-      console.log('User ID:', data.user.id);
-
-      // Never reuse a boarding code from a previous signed-in account.
+      if (error) throw error;
+      if (!data.session || !data.user) throw new Error('Login succeeded but no session was created.');
       await AsyncStorage.removeItem('boarding_access_code');
-      // Authenticated customer can browse without a boarding code.
-      navigation.reset({
-        index: 0,
-        routes: [
-          {
-            name: 'MainTabs',
-            params: { guestMode: true },
-          },
-        ],
-      });
+      navigation.reset({ index: 0, routes: [{ name: 'MainTabs', params: { guestMode: true } }] });
     } catch (error: any) {
-      console.log('Unexpected login error:', error);
-
-      if (Platform.OS === 'web') {
-        window.alert(
-          'Login Failed: ' +
-            (error?.message || 'Something went wrong.')
-        );
-      } else {
-        Alert.alert(
-          'Login Failed',
-          error?.message || 'Something went wrong.'
-        );
-      }
-    } finally {
-      setLoading(false);
-    }
+      const message = error?.message || 'Something went wrong. Please try again.';
+      if (Platform.OS === 'web') window.alert(`Login failed: ${message}`);
+      else Alert.alert('Login failed', message);
+    } finally { setLoading(false); }
   };
+
+  if (!fontsLoaded) {
+    return <View style={styles.loading}><ActivityIndicator color="#0B6E71" /></View>;
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        {/* Header */}
-        <Text style={styles.title}>Login</Text>
-        <Text style={styles.subtitle}>See your pet at all times ♡</Text>
+        <ScrollView
+          ref={scrollRef}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.scrollContent, keyboardOpen && styles.scrollFocused]}
+        >
+          <Text style={[styles.title, keyboardOpen && styles.titleSmall]}>Login</Text>
+          <Text style={styles.subtitle}>See your pet at all times ♡</Text>
+          {!keyboardOpen && <Image source={require('../assets/Login/Logo.jpg')} style={styles.logo} resizeMode="contain" />}
+          {!keyboardOpen && <Image source={require('../assets/Login/Loginver2.png')} style={styles.catImage} resizeMode="contain" />}
 
-        {/* Logo */}
-        <Image
-          source={require('../assets/Login/Logo.jpg')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-
-        {/* Cat + Form */}
-        <View style={styles.catWrapper}>
-          <Image
-            source={require('../assets/Login/Loginver2.png')}
-            style={styles.catImage}
-            resizeMode="contain"
-          />
-
-          <View style={styles.formContainer}>
+          <View style={[styles.formContainer, keyboardOpen && styles.formFocused]}>
             <TextInput
               style={styles.input}
               placeholder="Email"
@@ -139,133 +78,82 @@ export default function LoginScreen({ navigation }: any) {
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
+              autoCorrect={false}
+              textContentType="emailAddress"
+              returnKeyType="next"
+              editable={!loading}
+              onSubmitEditing={() => passwordRef.current?.focus()}
+              onFocus={() => scrollRef.current?.scrollToEnd({ animated: true })}
             />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              placeholderTextColor="#999"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
-
-            <TouchableOpacity style={styles.forgotButton}>
+            <View style={styles.passwordRow}>
+              <TextInput
+                ref={passwordRef}
+                style={styles.passwordInput}
+                placeholder="Password"
+                placeholderTextColor="#999"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                textContentType="password"
+                autoCapitalize="none"
+                returnKeyType="done"
+                editable={!loading}
+                onFocus={() => setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 180)}
+                onSubmitEditing={handleLogin}
+              />
+              <TouchableOpacity
+                style={styles.eyeButton}
+                onPress={() => setShowPassword((previous) => !previous)}
+                accessibilityRole="button"
+                accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                disabled={loading}
+              >
+                <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={23} color="#0B6E71" />
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity style={styles.forgotButton} onPress={() => navigation.navigate('ForgotPassword', { email: email.trim() })}>
               <Text style={styles.forgotText}>Forgot Password?</Text>
             </TouchableOpacity>
-
             <TouchableOpacity
               style={styles.loginButton}
               activeOpacity={0.85}
               onPress={handleLogin}
               disabled={loading}
             >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.loginButtonText}>LOGIN WITH EMAIL</Text>
-              )}
+              {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.loginButtonText}>LOGIN WITH EMAIL</Text>}
             </TouchableOpacity>
-
             <Text style={styles.signupText}>
               Don't have an account?{' '}
-              <Text
-                style={styles.signupLink}
-                onPress={() => navigation.navigate('SignUp')}
-              >
-                Sign Up!
-              </Text>
+              <Text style={styles.signupLink} onPress={() => navigation.navigate('SignUp')}>Sign Up!</Text>
             </Text>
           </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFdf8',
-  },
-  keyboardView: {
-    flex: 1,
-    alignItems: 'center',
-    paddingTop: 20,
-  },
-  title: {
-    marginTop: 50,
-    fontFamily: 'DancingScript_700Bold',
-    fontSize: 60,
-    color: '#0B6E71',
-  },
-  subtitle: {
-    fontSize: 13,
-    color: '#0B6E71',
-    marginTop: 2,
-    marginBottom: 5,
-  },
-  logo: {
-    width: 280,
-    height: 220,
-    marginBottom: -15,
-  },
-  catWrapper: {
-    flex: 1,
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-  },
-  catImage: {
-    width: 330,
-    height: height * 0.48,
-    bottom: -50,
-  },
-  formContainer: {
-    position: 'absolute',
-    bottom: height * 0.06,
-    width: '82%',
-    maxWidth: 320,
-    alignItems: 'center',
-  },
-  input: {
-    width: '100%',
-    backgroundColor: 'rgba(255,255,255,0.94)',
-    borderRadius: 12,
-    paddingVertical: 13,
-    paddingHorizontal: 18,
-    fontSize: 15,
-    marginBottom: 10,
-    color: '#333',
-  },
-  forgotButton: {
-    alignSelf: 'flex-end',
-    marginBottom: 12,
-  },
-  forgotText: {
-    color: '#0B6E71',
-    fontSize: 12.5,
-  },
-  loginButton: {
-    width: '100%',
-    backgroundColor: '#0B6E71',
-    paddingVertical: 15,
-    borderRadius: 14,
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  loginButtonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  signupText: {
-    textAlign: 'center',
-    color: '#666',
-    fontSize: 13.5,
-  },
-  signupLink: {
-    color: '#0B6E71',
-    fontWeight: '700',
-  },
+  container: { flex: 1, backgroundColor: '#FFFDF8' },
+  keyboardView: { flex: 1 },
+  loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  scrollContent: { flexGrow: 1, alignItems: 'center', paddingHorizontal: 24, paddingTop: 16, paddingBottom: 36 },
+  scrollFocused: { justifyContent: 'center', paddingTop: 12, paddingBottom: 36 },
+  title: { marginTop: 30, fontFamily: 'DancingScript_700Bold', fontSize: 58, color: '#0B6E71' },
+  titleSmall: { marginTop: 0, fontSize: 42 },
+  subtitle: { fontSize: 13, color: '#0B6E71', marginBottom: 3 },
+  logo: { width: 240, height: 165 },
+  catImage: { width: '100%', maxWidth: 335, height: 190, marginTop: -7, marginBottom: -4 },
+  formContainer: { width: '100%', maxWidth: 340, alignItems: 'center', marginTop: 4 },
+  formFocused: { marginTop: 20 },
+  input: { width: '100%', backgroundColor: '#FFF', borderWidth: 1, borderColor: '#DDE8E6', borderRadius: 12, height: 52, paddingHorizontal: 17, fontSize: 15, marginBottom: 11, color: '#333' },
+  passwordRow: { width: '100%', flexDirection: 'row', alignItems: 'center', height: 52, borderWidth: 1, borderColor: '#DDE8E6', backgroundColor: '#FFF', borderRadius: 12, marginBottom: 10 },
+  passwordInput: { flex: 1, height: '100%', paddingLeft: 17, paddingRight: 5, color: '#333', fontSize: 15 },
+  eyeButton: { width: 49, height: 50, alignItems: 'center', justifyContent: 'center' },
+  forgotButton: { alignSelf: 'flex-end', marginBottom: 14, paddingVertical: 4 },
+  forgotText: { color: '#0B6E71', fontSize: 13 },
+  loginButton: { width: '100%', backgroundColor: '#0B6E71', minHeight: 50, paddingVertical: 13, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  loginButtonText: { color: '#FFF', fontSize: 15, fontWeight: '700' },
+  signupText: { textAlign: 'center', color: '#666', fontSize: 13.5, marginBottom: 10 },
+  signupLink: { color: '#0B6E71', fontWeight: '700' },
 });

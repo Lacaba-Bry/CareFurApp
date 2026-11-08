@@ -1,0 +1,8 @@
+[functions.request-booking-extension]
+verify_jwt = false
+
+[functions.register-feeding-push]
+verify_jwt = false
+
+[functions.send-feeding-push]
+verify_jwt = false

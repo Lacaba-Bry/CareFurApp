@@ -445,14 +445,6 @@ export default function CodeScreen({
       }
     };
 
-  // ============================================================
-  // BACK
-  // ============================================================
-
-  const handleBack =
-    () => {
-      navigation.reset({index:0,routes:[{name:'MainTabs',params:{guestMode:true}}]});
-    };
 
   // ============================================================
   // SCREEN
@@ -480,25 +472,7 @@ export default function CodeScreen({
             styles.container
           }
         >
-          {/* BACK */}
 
-          <TouchableOpacity
-            style={
-              styles.backButton
-            }
-            onPress={
-              handleBack
-            }
-            activeOpacity={
-              0.7
-            }
-          >
-            <Ionicons
-              name="chevron-back"
-              size={26}
-              color="#16444A"
-            />
-          </TouchableOpacity>
 
           {/* CONTENT */}
 
@@ -716,21 +690,6 @@ const styles =
 
       paddingHorizontal:
         24,
-    },
-
-    backButton: {
-      width: 42,
-
-      height: 42,
-
-      alignItems:
-        'center',
-
-      justifyContent:
-        'center',
-
-      marginTop:
-        12,
     },
 
     content: {

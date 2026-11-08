@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -13,12 +13,14 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Keyboard,
 } from 'react-native';
 import {
   useFonts,
   DancingScript_700Bold,
 } from '@expo-google-fonts/dancing-script';
-import { supabase } from '../lib/supabase'; // ← adjust path if your file is elsewhere
+import { supabase } from '../lib/supabase';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function SignUpScreen({ navigation }: any) {
   const [fullName, setFullName] = useState('');
@@ -30,6 +32,13 @@ export default function SignUpScreen({ navigation }: any) {
   const [termsRead, setTermsRead] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [messageModal, setMessageModal] = useState<{ title: string; message: string; success?: boolean } | null>(null);
+  const scrollRef = useRef<ScrollView>(null);
+  const showMessage = (title: string, message: string, success = false) =>
+    setMessageModal({ title, message, success });
+
 
   const [fontsLoaded] = useFonts({
     DancingScript_700Bold,
@@ -66,85 +75,59 @@ export default function SignUpScreen({ navigation }: any) {
   };
 
   const handleSignUp = async () => {
-  if (!fullName.trim()) {
-    alert('Please enter your full name.');
-    return;
-  }
-  if (!email.trim()) {
-    alert('Please enter your email.');
-    return;
-  }
-  if (!password) {
-    alert('Please enter a password.');
-    return;
-  }
-  if (password.length < 6) {
-    alert('Password must be at least 6 characters.');
-    return;
-  }
-  if (password !== confirmPassword) {
-    alert('Passwords do not match.');
-    return;
-  }
-  if (!agreed) {
-    alert('You must agree to the Terms & Conditions.');
-    return;
-  }
+    if (!fullName.trim()) return showMessage('Name required', 'Please enter your full name.');
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
+      return showMessage('Email required', 'Enter a valid email address.');
+    if (!password) return showMessage('Password required', 'Please enter a password.');
+    if (password.length < 6) return showMessage('Password too short', 'Use at least 6 characters.');
+    if (password !== confirmPassword) return showMessage('Passwords do not match', 'Please check your confirmation password.');
+    if (!agreed) return showMessage('Agreement required', 'Please read and accept the Terms & Conditions.');
 
-  setLoading(true);
+    setLoading(true);
+    Keyboard.dismiss();
+    const normalized = email.trim().toLowerCase();
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signUp({ email: normalized, password });
+      if (authError) {
+        const text = authError.message || '';
+        if (/already|registered|exists|duplicate/i.test(text) || authError.status === 422) {
+          showMessage('Account already exists', 'An account may already be registered with this email. Please log in or use Forgot Password.');
+        } else showMessage('Sign up failed', text || 'Please try again later.');
+        return;
+      }
+      // With email confirmations enabled Supabase can return an obfuscated user
+      // with an empty identities array for an existing account.
+      if (authData.user && Array.isArray(authData.user.identities) && authData.user.identities.length === 0) {
+        showMessage('Account may already exist', 'Please sign in or use Forgot Password if you have registered with this email.');
+        return;
+      }
+      if (!authData.user) {
+        showMessage('Check your email', 'If registration can continue, follow the instructions sent to your email.');
+        return;
+      }
 
-  try {
-    // 1. Create Auth user
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: email.trim().toLowerCase(),
-      password,
-    });
-
-    if (authError) {
-      alert('Sign up failed: ' + authError.message);
-      return;
-    }
-
-    if (!authData.user) {
-      alert('Sign up failed: No user returned.');
-      return;
-    }
-
-    // 2. Insert into owners table
-    const { error: insertError } = await supabase.from('owners').insert({
-      id: authData.user.id,
-      full_name: fullName.trim(),
-      email: email.trim().toLowerCase(),
-    });
-
-    if (insertError) {
-      alert('Profile error: ' + insertError.message);
-      return;
-    }
-
-    // 3. Keep public.users in sync for messaging/conversation foreign keys.
-    // This is safe to retry because the id is the authenticated user's id.
-    const { error: userProfileError } = await supabase.from('users').upsert({
-      id: authData.user.id,
-      full_name: fullName.trim(),
-      email: email.trim().toLowerCase(),
-      role: 'owner',
-    }, { onConflict: 'id' });
-
-    if (userProfileError) {
-      console.warn('Public users profile warning:', userProfileError);
-    }
-
-    // Success
-    alert('Account created successfully!');
-    navigation.navigate('Login');
-
-  } catch (err: any) {
-    alert('Unexpected error: ' + (err.message ?? 'Something went wrong'));
-  } finally {
-    setLoading(false);
-  }
-};
+      // Existing application profile setup is preserved.
+      const { error: insertError } = await supabase.from('owners').insert({
+        id: authData.user.id, full_name: fullName.trim(), email: normalized,
+      });
+      if (insertError) {
+        if (insertError.code === '23505') {
+          showMessage('Account already exists', 'This email is already registered. Please log in or use Forgot Password.');
+        } else {
+          showMessage('Account created — setup incomplete', 'Please confirm your email and contact CareFur staff if your profile does not appear.');
+          console.warn('Owner profile setup warning:', insertError.message);
+        }
+        return;
+      }
+      const { error: userProfileError } = await supabase.from('users').upsert({
+        id: authData.user.id, full_name: fullName.trim(), email: normalized, role: 'owner',
+      }, { onConflict: 'id' });
+      if (userProfileError) console.warn('Public users profile warning:', userProfileError.message);
+      showMessage('Account created', 'Your account has been created. Please confirm your email if requested, then log in.', true);
+    } catch (err: any) {
+      showMessage('Sign up failed', err?.message || 'Something went wrong. Please try again.');
+    } finally { setLoading(false); }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -152,6 +135,7 @@ export default function SignUpScreen({ navigation }: any) {
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
+        <ScrollView ref={scrollRef} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
         <View style={styles.upper}>
           <Text style={styles.title}>Sign Up</Text>
           <Text style={styles.subtitle}>See your pet at all times ♡</Text>
@@ -185,25 +169,39 @@ export default function SignUpScreen({ navigation }: any) {
               editable={!loading}
             />
 
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              placeholderTextColor="#999"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              editable={!loading}
-            />
+            <View style={styles.passwordRow}>
+              <TextInput
+                style={styles.passwordField}
+                placeholder="Password"
+                placeholderTextColor="#999"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                editable={!loading}
+                onFocus={() => setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 150)}
+              />
+              <TouchableOpacity style={styles.eyeButton} onPress={() => setShowPassword(v => !v)} accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}>
+                <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={21} color="#0B6E71" />
+              </TouchableOpacity>
+            </View>
 
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm Password"
-              placeholderTextColor="#999"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-              editable={!loading}
-            />
+            <View style={styles.passwordRow}>
+              <TextInput
+                style={styles.passwordField}
+                placeholder="Confirm Password"
+                placeholderTextColor="#999"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={!showConfirmPassword}
+                autoCapitalize="none"
+                editable={!loading}
+                onFocus={() => setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 150)}
+              />
+              <TouchableOpacity style={styles.eyeButton} onPress={() => setShowConfirmPassword(v => !v)} accessibilityLabel={showConfirmPassword ? 'Hide password' : 'Show password'}>
+                <Ionicons name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={21} color="#0B6E71" />
+              </TouchableOpacity>
+            </View>
 
             <View style={styles.checkboxRow}>
               <TouchableOpacity
@@ -262,6 +260,26 @@ export default function SignUpScreen({ navigation }: any) {
           </View>
         </View>
 
+        </ScrollView>
+        {/* Styled signup alerts */}
+        <Modal transparent animationType="fade" visible={messageModal !== null} onRequestClose={() => setMessageModal(null)}>
+          <View style={styles.alertBackdrop}>
+            <View style={styles.alertCard}>
+              <View style={styles.alertIcon}>
+                <Ionicons name={messageModal?.success ? 'checkmark-circle-outline' : 'information-circle-outline'} size={34} color="#0B6E71" />
+              </View>
+              <Text style={styles.alertTitle}>{messageModal?.title}</Text>
+              <Text style={styles.alertBody}>{messageModal?.message}</Text>
+              <TouchableOpacity style={styles.alertAction} onPress={() => {
+                const succeeded = messageModal?.success;
+                setMessageModal(null);
+                if (succeeded) navigation.navigate('Login');
+              }}>
+                <Text style={styles.alertActionText}>{messageModal?.success ? 'CONTINUE TO LOGIN' : 'OK'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
         {/* Terms Modal */}
         <Modal
           visible={termsVisible}
@@ -476,6 +494,16 @@ const styles = StyleSheet.create({
     color: '#333',
     fontSize: 15,
   },
+  passwordRow: { flexDirection: 'row', alignItems: 'center', height: 46, marginBottom: 9, borderRadius: 12, backgroundColor: '#F0F0F0' },
+  passwordField: { flex: 1, height: '100%', paddingLeft: 16, fontSize: 15, color: '#333' },
+  eyeButton: { width: 48, height: 46, alignItems: 'center', justifyContent: 'center' },
+  alertBackdrop: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.55)', padding: 24 },
+  alertCard: { width: '100%', maxWidth: 370, padding: 25, borderRadius: 22, backgroundColor: '#FFFDF8', alignItems: 'center' },
+  alertIcon: { width: 68, height: 68, borderRadius: 34, backgroundColor: '#E5F4F1', alignItems: 'center', justifyContent: 'center', marginBottom: 13 },
+  alertTitle: { fontSize: 19, fontWeight: '800', color: '#16444A', textAlign: 'center', marginBottom: 10 },
+  alertBody: { fontSize: 14, lineHeight: 21, color: '#607477', textAlign: 'center', marginBottom: 22 },
+  alertAction: { width: '100%', backgroundColor: '#0B6E71', paddingVertical: 14, borderRadius: 12, alignItems: 'center' },
+  alertActionText: { color: '#FFF', fontWeight: '800', fontSize: 13 },
   checkboxRow: {
     flexDirection: 'row',
     alignItems: 'center',

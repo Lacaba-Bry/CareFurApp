@@ -29,10 +29,6 @@ export default function WelcomeScreen({ navigation }: any) {
           <Text style={styles.emailButtonText}>LOGIN WITH EMAIL</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.facebookButton} activeOpacity={0.8}>
-          <Text style={styles.facebookButtonText}>LOGIN WITH FACEBOOK</Text>
-        </TouchableOpacity>
-
         {/* Fixed: wrapped in <Text> */}
         <Text style={styles.signupText}>
           Don't have an account?{' '}
@@ -46,7 +42,7 @@ export default function WelcomeScreen({ navigation }: any) {
 
         <Text style={styles.termsText}>
           By continuing you agree to our{'\n'}
-          <Text style={styles.termsLink}>Terms & Privacy Policy</Text>
+          <Text style={styles.termsLink} onPress={() => navigation.navigate('LegalInfo')}>Terms & Privacy Policy</Text>
         </Text>
       </View>
     </SafeAreaView>
@@ -89,19 +85,6 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   emailButtonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
-    letterSpacing: 0.8,
-  },
-  facebookButton: {
-    backgroundColor: '#1877F2',
-    paddingVertical: 16,
-    borderRadius: 14,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  facebookButtonText: {
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '700',
